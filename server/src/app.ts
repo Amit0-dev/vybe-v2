@@ -1,6 +1,7 @@
 import express from "express";
 import cors from "cors";
 import cookieParser from "cookie-parser";
+import { healthRouter } from "./modules/health/health.routes.js";
 
 export function createApp() {
     const app = express();
@@ -16,11 +17,7 @@ export function createApp() {
     app.use(express.urlencoded({ extended: true }));
     app.use(cookieParser());
 
-    app.get("/health", (_req, res) => {
-        res.status(200).json({
-            status: "ok",
-        });
-    });
+    app.use(healthRouter)
 
     return app;
 }
