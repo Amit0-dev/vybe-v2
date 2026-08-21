@@ -2,6 +2,7 @@ import express from "express";
 import cors from "cors";
 import cookieParser from "cookie-parser";
 import { healthRouter } from "./modules/health/health.routes.js";
+import { errorHandler } from "./middleware/error-handler.middleware.js";
 
 export function createApp() {
     const app = express();
@@ -18,6 +19,8 @@ export function createApp() {
     app.use(cookieParser());
 
     app.use(healthRouter)
+
+    app.use(errorHandler)
 
     return app;
 }
