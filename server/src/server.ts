@@ -1,21 +1,45 @@
 import { createApp } from "./app.js";
 import { env } from "./config/env.js";
 import { logger } from "./infra/logger.js";
+import { connectInfra, disconnectInfra } from "./infra/index.js";
+import type { Server } from "node:http";
 
 const app = createApp();
 
-const server = app.listen(env.PORT, () => {
-    logger.info(`Server running on port ${env.PORT}`);
-});
+let server: Server | undefined;
 
-function shutdown(signal: string) {
-    logger.info(`${signal} received. Shutting down...`);
+try {
+    await connectInfra();
 
-    server.close(() => {
-        logger.info("HTTP server closed");
-        process.exit(0);
+    server = app.listen(env.PORT, () => {
+        logger.info(`Server running on port ${env.PORT}`);
     });
+} catch (error) {
+    logger.fatal(error, "Failed to start application");
+    process.exit(1);
 }
 
-process.on("SIGTERM", () => shutdown("SIGTERM"));
-process.on("SIGINT", () => shutdown("SIGINT"));
+async function shutdown(signal: string) {
+    logger.info(`${signal} received. Shutting down...`);
+
+    if (server) {
+        server.close(async () => {
+            try {
+                await disconnectInfra();
+
+                logger.info("Application shutdown complete");
+                process.exit(0);
+            } catch (error) {
+                logger.error(error, "Error during shutdown");
+                process.exit(1);
+            }
+        });
+    }
+}
+
+process.on("SIGTERM", () => {
+    void shutdown("SIGTERM");
+});
+process.on("SIGINT", () => {
+    void shutdown("SIGINT");
+});
