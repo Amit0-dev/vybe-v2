@@ -24,3 +24,30 @@ export async function createSpace(input: CreateSpaceRecord) {
         return space;
     });
 }
+
+export async function findSpaceByJoinCode(joinCode: string) {
+    return prisma.space.findUnique({
+        where: { joinCode },
+    });
+}
+
+export async function findMembership(spaceId: string, userId: string) {
+    return prisma.spaceMember.findUnique({
+        where: {
+            spaceId_userId: {
+                spaceId,
+                userId,
+            },
+        },
+    });
+}
+
+export async function createMembership(userId: string, spaceId: string) {
+    return prisma.spaceMember.create({
+        data: {
+            spaceId,
+            userId,
+            role: "PARTICIPANT",
+        },
+    });
+}

@@ -8,4 +8,11 @@ export const createSpaceSchema = z.object({
         .max(100, "Space password is too long"),
 });
 
+export const joinSpaceSchema = z.object({
+    joinCode: z.string().trim().min(1, "Join code is required").max(20, "Invalid join code"),
+
+    password: z.string().min(1, "Password is required").max(100),
+});
+
 export type CreateSpaceInput = z.infer<typeof createSpaceSchema>;
+export type JoinSpaceInput = z.infer<typeof joinSpaceSchema>;
