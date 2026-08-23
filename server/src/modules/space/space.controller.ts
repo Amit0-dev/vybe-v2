@@ -1,6 +1,14 @@
 import type { RequestHandler } from "express";
 import { createSpaceSchema, joinSpaceSchema } from "./space.schema.js";
-import { createSpace, joinSpace } from "./space.service.js";
+import {
+    closeSpace,
+    createSpace,
+    getSpace,
+    getSpaceMembers,
+    joinSpace,
+    leaveSpace,
+} from "./space.service.js";
+import { parseSpaceIdParams } from "../../middleware/space.middleware.js";
 
 export const createSpaceController: RequestHandler = async (req, res) => {
     const input = createSpaceSchema.parse(req.body);
@@ -32,5 +40,41 @@ export const joinSpaceController: RequestHandler = async (req, res) => {
             role: membership.role,
             joinedAt: membership.joinedAt,
         },
+    });
+};
+
+export const getSpaceController: RequestHandler = async (req, res) => {
+    const { spaceId } = parseSpaceIdParams(req.params);
+
+    const space = getSpace(spaceId);
+
+    return res.status(200).json({ space });
+};
+
+export const getSpaceMembersController: RequestHandler = async (req, res) => {
+    const { spaceId } = parseSpaceIdParams(req.params);
+
+    const spaceMembers = getSpaceMembers(spaceId);
+
+    return res.status(200).json({ spaceMembers });
+};
+
+export const leaveSpaceController: RequestHandler = async (req, res) => {
+    const { spaceId } = parseSpaceIdParams(req.params);
+    const userId = res.locals.user.id;
+    const role = res.locals.spaceMembership.role;
+
+    await leaveSpace(spaceId, userId, role);
+
+    return res.status(204).send();
+};
+
+export const closeSpaceController: RequestHandler = async (req, res) => {
+    const { spaceId } = parseSpaceIdParams(req.params);
+
+    const space = await closeSpace(spaceId);
+
+    return res.status(200).json({
+        space,
     });
 };

@@ -51,3 +51,65 @@ export async function createMembership(userId: string, spaceId: string) {
         },
     });
 }
+
+export async function findSpaceById(spaceId: string) {
+    return prisma.space.findUnique({
+        where: { id: spaceId },
+        select: {
+            id: true,
+            name: true,
+            joinCode: true,
+            status: true,
+            ownerId: true,
+            createdAt: true,
+            updatedAt: true,
+        },
+    });
+}
+
+export async function findSpaceMembers(spaceId: string) {
+    return prisma.spaceMember.findMany({
+        where: { spaceId },
+        select: {
+            id: true,
+            role: true,
+            joinedAt: true,
+            user: {
+                select: {
+                    id: true,
+                    name: true,
+                    image: true,
+                },
+            },
+        },
+        orderBy: {
+            joinedAt: "asc",
+        },
+    });
+}
+
+export async function deleteMembership(spaceId: string, userId: string) {
+    return prisma.spaceMember.delete({
+        where: {
+            spaceId_userId: {
+                userId,
+                spaceId,
+            },
+        },
+    });
+}
+
+export async function closeSpace(spaceId: string) {
+    return prisma.space.update({
+        where: { id: spaceId },
+        data: {
+            status: "CLOSED",
+        },
+        select: {
+            id: true,
+            name: true,
+            status: true,
+            updatedAt: true,
+        },
+    });
+}

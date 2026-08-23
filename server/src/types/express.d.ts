@@ -1,3 +1,4 @@
+import { SpaceMember } from "../generated/prisma/client.ts";
 import type { CurrentUser } from "./auth.ts";
 
 declare global {
@@ -9,6 +10,8 @@ declare global {
                 userId: string;
                 expiresAt: Date;
             };
+
+            spaceMembership: SpaceMember
         }
     }
 }

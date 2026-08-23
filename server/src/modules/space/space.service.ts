@@ -4,11 +4,20 @@ import { generateJoinCode } from "./space.utils.js";
 import {
     createMembership,
     createSpace as createSpaceRecord,
+    deleteMembership,
     findMembership,
+    findSpaceById,
     findSpaceByJoinCode,
+    findSpaceMembers,
+    closeSpace as closeSpaceRecord
 } from "./space.repository.js";
 import { Prisma } from "../../generated/prisma/client.js";
-import { ConflictError, NotFoundError, UnauthorizedError } from "../../lib/errors.js";
+import {
+    ConflictError,
+    ForbiddenError,
+    NotFoundError,
+    UnauthorizedError,
+} from "../../lib/errors.js";
 
 const MAX_JOIN_CODE_ATTEMPTS = 3;
 
@@ -63,4 +72,33 @@ export async function joinSpace(input: JoinSpaceInput, userId: string) {
     }
 
     return createMembership(userId, space.id);
+}
+
+export async function getSpace(spaceId: string) {
+    const space = await findSpaceById(spaceId);
+
+    if (!space) {
+        throw new NotFoundError("Space not found", "SPACE_NOT_FOUND");
+    }
+
+    return space;
+}
+
+export async function getSpaceMembers(spaceId: string) {
+    return findSpaceMembers(spaceId);
+}
+
+export async function leaveSpace(spaceId: string, userId: string, role: "OWNER" | "PARTICIPANT") {
+    if (role === "OWNER") {
+        throw new ForbiddenError(
+            "The space owner cannot leave the space",
+            "OWNER_CANNOT_LEAVE_SPACE",
+        );
+    }
+
+    return deleteMembership(spaceId, userId);
+}
+
+export async function closeSpace(spaceId: string) {
+    return closeSpaceRecord(spaceId);
 }
