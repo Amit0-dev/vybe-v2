@@ -6,6 +6,7 @@ import { errorHandler } from "./middleware/error-handler.middleware.js";
 import { toNodeHandler } from "better-auth/node";
 import { auth } from "./lib/auth.js";
 import { authRouter } from "./modules/auth/auth.routes.js";
+import { spaceRouter } from "./modules/space/space.routes.js";
 
 export function createApp() {
     const app = express();
@@ -24,7 +25,8 @@ export function createApp() {
     app.use(cookieParser());
 
     app.use(healthRouter);
-    app.use("/api", authRouter);
+    app.use("/api/user", authRouter);
+    app.use("/api/spaces", spaceRouter)
 
     app.use(errorHandler);
 
