@@ -19,6 +19,8 @@ const envSchema = z.object({
     GOOGLE_CLIENT_SECRET: z.string().min(1).optional(),
 
     CLIENT_URL: z.url(),
+
+    YOUTUBE_API_KEY: z.string().min(1),
 });
 
 export const env = envSchema.parse(process.env);

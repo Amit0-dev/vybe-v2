@@ -4,6 +4,7 @@ import { auth } from "../lib/auth.js";
 import { UnauthorizedError } from "../lib/errors.js";
 import type { CurrentUser } from "../types/auth.js";
 import { asyncHandler } from "../lib/async-handler.js";
+import { findUserById } from "../modules/auth/auth.repository.js";
 
 const authenticate: RequestHandler = async (req, res, next) => {
     const session = await auth.api.getSession({
@@ -14,11 +15,18 @@ const authenticate: RequestHandler = async (req, res, next) => {
         throw new UnauthorizedError();
     }
 
+    const dbUser = await findUserById(session.user.id);
+
+    if (!dbUser) {
+        throw new UnauthorizedError();
+    }
+
     const user: CurrentUser = {
-        id: session.user.id,
-        email: session.user.email,
-        name: session.user.name,
-        image: session.user.image ?? null,
+        id: dbUser.id,
+        email: dbUser.email,
+        name: dbUser.name,
+        image: dbUser.image,
+        role: dbUser.role,
     };
 
     res.locals.user = user;
