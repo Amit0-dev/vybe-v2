@@ -1,3 +1,4 @@
+import { Prisma } from "../../generated/prisma/client.js";
 import { getYoutubeVideo } from "../../integrations/youtube/youtube.client.js";
 import { BadRequestError, NotFoundError } from "../../lib/errors.js";
 import { createTrack, findYouTubeTrack } from "./track.repository.js";
@@ -23,11 +24,23 @@ export async function createYouTubeTrack(input: CreateYoutubeTrackInput) {
         throw new NotFoundError("YouTube video not found", "YOUTUBE_VIDEO_NOT_FOUND");
     }
 
-    return createTrack({
-        title: video.title,
-        artist: video.channelTitle,
-        durationSec: video.durationSec,
-        source: "YOUTUBE",
-        sourceId: video.id,
-    });
+    try {
+        return createTrack({
+            title: video.title,
+            artist: video.channelTitle,
+            durationSec: video.durationSec,
+            source: "YOUTUBE",
+            sourceId: video.id,
+        });
+    } catch (error) {
+        if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2002") {
+            const existingTrack = await findYouTubeTrack(video.id);
+
+            if (existingTrack) {
+                return existingTrack;
+            }
+        }
+
+        throw error;
+    }
 }

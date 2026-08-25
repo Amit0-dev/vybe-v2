@@ -45,3 +45,9 @@ export class UnprocessableEntityError extends AppError {
         super(message, 422, code);
     }
 }
+
+export class ExternalServiceError extends AppError {
+    constructor(message = "External service unavailable", code = "EXTERNAL_SERVICE_ERROR") {
+        super(message, 502, code);
+    }
+}
