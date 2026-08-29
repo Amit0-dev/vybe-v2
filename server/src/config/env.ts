@@ -28,6 +28,11 @@ const envSchema = z.object({
     AWS_SECRET_ACCESS_KEY: z.string().min(1),
 
     SQS_CUSTOM_TRACK_QUEUE_URL: z.url(),
+
+    MAX_CUSTOM_TRACK_SIZE_MB: z.coerce
+    .number()
+    .positive()
+    .default(50),
 });
 
 export const env = envSchema.parse(process.env);

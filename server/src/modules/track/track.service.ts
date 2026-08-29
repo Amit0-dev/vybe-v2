@@ -2,7 +2,12 @@ import { Prisma } from "../../generated/prisma/client.js";
 import { generateUploadUrl } from "../../integrations/storage/s3.client.js";
 import { getYoutubeVideo } from "../../integrations/youtube/youtube.client.js";
 import { BadRequestError, NotFoundError } from "../../lib/errors.js";
-import { createTrack, findYouTubeTrack } from "./track.repository.js";
+import {
+    createCustomTrackUpload,
+    createTrack,
+    deleteCustomTrackUpload,
+    findYouTubeTrack,
+} from "./track.repository.js";
 import { type CreateCustomTrackUploadInput, CreateYoutubeTrackInput } from "./track.schema.js";
 import { extractYoutubeVideoId, generateCustomTrackStorageKey } from "./track.utils.js";
 
@@ -49,12 +54,22 @@ export async function createYouTubeTrack(input: CreateYoutubeTrackInput) {
 export async function createCustomTrackUploadUrl(input: CreateCustomTrackUploadInput) {
     const storageKey = generateCustomTrackStorageKey();
 
-    const uploadUrl = await generateUploadUrl(storageKey);
-
-    return {
-        uploadUrl,
-        storageKey,
+    const upload = await createCustomTrackUpload({
         title: input.title,
         artist: input.artist,
-    };
+        storageKey,
+    });
+
+    try {
+        const uploadUrl = await generateUploadUrl(storageKey);
+
+        return {
+            uploadId: upload.id,
+            uploadUrl,
+            storageKey,
+        };
+    } catch (error) {
+        await deleteCustomTrackUpload(upload.id);
+        throw error;
+    }
 }

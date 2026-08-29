@@ -1,4 +1,9 @@
-import { HeadObjectCommand, PutObjectCommand, S3Client } from "@aws-sdk/client-s3";
+import {
+    GetObjectCommand,
+    HeadObjectCommand,
+    PutObjectCommand,
+    S3Client,
+} from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import { env } from "../../config/env.js";
 
@@ -31,8 +36,28 @@ export async function getObjectMetadata(storageKey: string) {
     );
 }
 
-export async function getObject() {
-    // i am planning to add bg jobs.
+export async function getObject(storageKey: string) {
+    return s3Client.send(
+        new GetObjectCommand({
+            Bucket: env.AWS_S3_BUCKET,
+            Key: storageKey,
+        }),
+    );
 }
 
-// Tomorrow i will continue by adding queue and worker for processing the audio files.
+export async function getObjectBuffer(storageKey: string): Promise<Buffer> {
+    const response = await s3Client.send(
+        new GetObjectCommand({
+            Bucket: env.AWS_S3_BUCKET,
+            Key: storageKey,
+        }),
+    );
+
+    if (!response.Body) {
+        throw new Error("S3 object has no body");
+    }
+
+    const bytes = await response.Body.transformToByteArray();
+
+    return Buffer.from(bytes);
+}

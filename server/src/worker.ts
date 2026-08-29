@@ -1,35 +1,45 @@
 import { logger } from "./infra/logger.js";
 import { deleteMessage, receiveMessages } from "./integrations/queue/sqs.client.js";
+import { parseS3Event } from "./integrations/storage/s3.events.js";
+import { processSqsMessage } from "./workers/custom-track.worker.js";
 
 async function startWorker() {
     logger.info("Custom track worker started");
 
     while (true) {
-        const response = await receiveMessages();
+        try {
+            const response = await receiveMessages();
 
-        if (!response.Messages?.length) {
-            continue;
-        }
-
-        for (const message of response.Messages) {
-            logger.info(`Received SQS message: ${message.MessageId}`);
-
-            if (!message.Body) {
-                logger.warn(`SQS message has no body`);
+            if (!response.Messages?.length) {
                 continue;
             }
 
-            logger.info(`Message body: ${message.Body}`);
-
-            if (message.ReceiptHandle) {
-                await deleteMessage(message.ReceiptHandle);
+            for (const message of response.Messages) {
+                try {
+                    await processSqsMessage(message);
+                } catch (error) {
+                    logger.error(
+                        {
+                            err: error,
+                            messageId: message.MessageId,
+                        },
+                        "Failed to process SQS message",
+                    );
+                }
             }
+        } catch (error) {
+            logger.error(
+                {
+                    err: error,
+                },
+                "Failed to receive SQS messages",
+            );
         }
     }
 }
 
 startWorker().catch((error) => {
-    logger.error(
+    logger.fatal(
         {
             err: error,
         },

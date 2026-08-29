@@ -137,11 +137,19 @@ model Track {
 
   source     TrackSource
   sourceId   String?
-  storageKey String?
+  storageKey String?     @unique
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
   @@unique([source, sourceId])
   @@index([source])
+}
+
+model CustomTrackUpload {
+  id         String   @id @default(cuid())
+  title      String
+  artist     String?
+  storageKey String   @unique
+  createdAt  DateTime @default(now())
 }
