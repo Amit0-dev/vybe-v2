@@ -1,3 +1,5 @@
+import { randomUUID } from "node:crypto";
+
 export function extractYoutubeVideoId(value: string): string | null {
     try {
         const url = new URL(value);
@@ -14,4 +16,8 @@ export function extractYoutubeVideoId(value: string): string | null {
     } catch (error) {
         return null;
     }
+}
+
+export function generateCustomTrackStorageKey(): string {
+    return `custom/${randomUUID()}.mp3`;
 }
