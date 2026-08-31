@@ -3,6 +3,7 @@ import { env } from "./config/env.js";
 import { logger } from "./infra/logger.js";
 import { connectInfra, disconnectInfra } from "./infra/index.js";
 import type { Server } from "node:http";
+import { initializeRealtime } from "./realtime/realtime.server.js";
 
 const app = createApp();
 
@@ -14,6 +15,8 @@ try {
     server = app.listen(env.PORT, () => {
         logger.info(`Server running on port ${env.PORT}`);
     });
+
+    initializeRealtime(server);
 } catch (error) {
     logger.fatal(error, "Failed to start application");
     process.exit(1);
