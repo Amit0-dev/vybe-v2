@@ -1,5 +1,11 @@
 import { redis } from "../../infra/redis.js";
+import { Repair } from "./queue.reconciliation.js";
 import { findQueueItemsForRanking } from "./queue.repository.js";
+
+type RankingScoreUpdate = {
+    queueItemId: string;
+    score: number;
+};
 
 function getRankingKey(spaceId: string) {
     return `queue:ranking:${spaceId}`;
@@ -50,4 +56,33 @@ export async function getQueueItemRank(spaceId: string, queueItemId: string) {
 
 export async function removeQueueItem(spaceId: string, queueItemId: string) {
     return redis.zRem(getRankingKey(spaceId), queueItemId);
+}
+
+export async function getQueueRanking(spaceId: string) {
+    return redis.zRangeWithScores(getRankingKey(spaceId), 0, -1);
+}
+
+export async function repairQueueRanking(
+    spaceId: string,
+    scoreUpdates: RankingScoreUpdate[],
+    removals: string[],
+) {
+    if (scoreUpdates.length === 0 && removals.length === 0) {
+        return;
+    }
+
+    const multi = redis.multi();
+
+    for (const update of scoreUpdates) {
+        multi.zAdd(getRankingKey(spaceId), {
+            score: update.score,
+            value: update.queueItemId,
+        });
+    }
+
+    for (const queueItemId of removals) {
+        multi.zRem(getRankingKey(spaceId), queueItemId);
+    }
+
+    await multi.exec();
 }

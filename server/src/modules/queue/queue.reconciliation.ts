@@ -1,18 +1,33 @@
 import { logger } from "../../infra/logger.js";
-import { addQueueItem } from "./queue.ranking.js";
+import { getQueueRanking, repairQueueRanking } from "./queue.ranking.js";
 import {
     batchUpdateQueueItemScores,
     findQueueItemsForRanking,
     findQueueItemVoteTotals,
-    updateQueueItemScore,
 } from "./queue.repository.js";
 
-type Repair = {
+export type Repair = {
     queueItemId: string;
     score: number;
 };
 
 export async function reconcileSpaceQueue(spaceId: string) {
+    const expectedScores = await reconcilePostgresProjection(spaceId);
+
+    try {
+        await reconcileRedisProjection(spaceId, expectedScores);
+    } catch (error) {
+        logger.error(
+            {
+                error,
+                spaceId,
+            },
+            "Redis reconciliation failed",
+        );
+    }
+}
+
+async function reconcilePostgresProjection(spaceId: string) {
     const [queueItems, voteTotals] = await Promise.all([
         findQueueItemsForRanking(spaceId),
         findQueueItemVoteTotals(spaceId),
@@ -23,9 +38,12 @@ export async function reconcileSpaceQueue(spaceId: string) {
     );
 
     const repairs: Repair[] = [];
+    const expectedScores = new Map<string, number>();
 
     for (const queueItem of queueItems) {
         const authoritativeScore = voteScoreMap.get(queueItem.id) ?? 0;
+
+        expectedScores.set(queueItem.id, authoritativeScore);
 
         if (queueItem.score !== authoritativeScore) {
             repairs.push({
@@ -38,4 +56,37 @@ export async function reconcileSpaceQueue(spaceId: string) {
     if (repairs.length > 0) {
         await batchUpdateQueueItemScores(repairs);
     }
+
+    return expectedScores;
+}
+
+async function reconcileRedisProjection(spaceId: string, expectedScores: Map<string, number>) {
+    const redisRanking = await getQueueRanking(spaceId);
+
+    const actualScores = new Map(redisRanking.map((item) => [item.value, item.score]));
+
+    const scoreUpdates: {
+        queueItemId: string;
+        score: number;
+    }[] = [];
+    const removals: string[] = [];
+
+    for (const [queueItemId, expectedScore] of expectedScores) {
+        const actualScore = actualScores.get(queueItemId);
+
+        if (actualScore === undefined || actualScore !== expectedScore) {
+            scoreUpdates.push({
+                queueItemId,
+                score: expectedScore,
+            });
+        }
+    }
+
+    for (const queueItemId of actualScores.keys()) {
+        if (!expectedScores.has(queueItemId)) {
+            removals.push(queueItemId);
+        }
+    }
+
+    await repairQueueRanking(spaceId, scoreUpdates, removals);
 }
