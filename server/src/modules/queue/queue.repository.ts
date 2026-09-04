@@ -83,7 +83,6 @@ export async function batchUpdateQueueItemScores(
     }>,
 ) {
     for (let i = 0; i < updates.length; i += SCORE_UPDATE_BATCH_SIZE) {
-
         const batch = updates.slice(i, i + SCORE_UPDATE_BATCH_SIZE);
 
         const cases = batch.map(
@@ -100,4 +99,21 @@ export async function batchUpdateQueueItemScores(
             WHERE "id" IN (${Prisma.join(ids)});
         `;
     }
+}
+
+export async function findSpacesWithActiveQueues() {
+    return prisma.space.findMany({
+        where: {
+            queueItems: {
+                some: {
+                    status: {
+                        in: [QueueItemStatus.QUEUED, QueueItemStatus.PLAYING],
+                    },
+                },
+            },
+        },
+        select: {
+            id: true,
+        },
+    });
 }

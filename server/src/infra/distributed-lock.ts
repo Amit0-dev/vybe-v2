@@ -26,3 +26,19 @@ export async function acquireLock(name: string, ttlSeconds: number) {
         token,
     };
 }
+
+// Redis supports Lua scripts - atomically
+const RELEASE_LOCK_SCRIPT = `
+    if redis.call("GET", KEYS[1]) == ARGV[1] then
+        return redis.call("DEL", KEYS[1])
+    end
+
+    return 0
+`;
+
+export async function releaseLock(lock: { key: string; token: string }) {
+    await redis.eval(RELEASE_LOCK_SCRIPT, {
+        keys: [lock.key],
+        arguments: [lock.token],
+    });
+}

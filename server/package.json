@@ -5,9 +5,12 @@
   "main": "index.js",
   "scripts": {
     "dev": "tsx watch src/server.ts",
-    "dev:worker": "tsx watch src/worker.ts",
+    "dev:custom-track-worker": "tsx watch src/custom-track-worker.ts",
+    "dev:reconciliation-worker": "tsx watch src/reconciliation-worker.ts",
     "build": "tsc",
     "start": "node dist/server.js",
+    "start:custom-track-worker": "node dist/custom-track-worker.js",
+    "start:reconciliation-worker": "node dist/reconciliation-worker.js",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "test:watch": "vitest"

@@ -1,6 +1,5 @@
 import { logger } from "./infra/logger.js";
-import { deleteMessage, receiveMessages } from "./integrations/queue/sqs.client.js";
-import { parseS3Event } from "./integrations/storage/s3.events.js";
+import { receiveMessages } from "./integrations/queue/sqs.client.js";
 import { processSqsMessage } from "./workers/custom-track.worker.js";
 
 async function startWorker() {
@@ -43,7 +42,7 @@ startWorker().catch((error) => {
         {
             err: error,
         },
-        "Worker crashed",
+        "Custom track processing worker crashed",
     );
     process.exit(1);
 });

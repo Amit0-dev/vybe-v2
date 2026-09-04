@@ -17,7 +17,7 @@ type CreateTrackRecord = {
     durationSec: number;
     source: "YOUTUBE" | "CUSTOM";
     sourceId: string | null;
-    storageKey: string | null;
+    storageKey?: string | null;
 };
 
 export async function createTrack(input: CreateTrackRecord) {
