@@ -39,13 +39,11 @@ export async function processSqsMessage(message: {
         return;
     }
 
-    console.log("Started processing...", records)
     for (const record of records) {
         await processCustomTrack({
             storageKey: record.key,
         });
     }
-    console.log("Processing end :", records)
 
     if (message.ReceiptHandle) {
         await deleteMessage(message.ReceiptHandle);

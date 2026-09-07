@@ -117,3 +117,41 @@ export async function findSpacesWithActiveQueues() {
         },
     });
 }
+
+export async function findQueueItemsByIds(queueItemIds: string[]) {
+    return prisma.queueItem.findMany({
+        where: {
+            id: {
+                in: queueItemIds,
+            },
+        },
+        include: {
+            track: true,
+        },
+    });
+}
+
+export async function transitionQueueItemStatus(
+    queueItemId: string,
+    currentStatus: QueueItemStatus,
+    nextStatus: QueueItemStatus,
+) {
+    return prisma.queueItem.updateMany({
+        where: {
+            id: queueItemId,
+            status: currentStatus,
+        },
+        data: {
+            status: nextStatus,
+        },
+    });
+}
+
+export async function findQueueItemInSpace(queueItemId: string, spaceId: string) {
+    return prisma.queueItem.findFirst({
+        where: {
+            id: queueItemId,
+            spaceId,
+        },
+    });
+}

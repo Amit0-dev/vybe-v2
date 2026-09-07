@@ -1,8 +1,5 @@
 import { parseBuffer } from "music-metadata";
-import {
-    getObjectBuffer,
-    getObjectMetadata,
-} from "../../integrations/storage/s3.client.js";
+import { getObjectBuffer, getObjectMetadata } from "../../integrations/storage/s3.client.js";
 import { NotFoundError, UnprocessableEntityError } from "../../lib/errors.js";
 import {
     createTrack,
@@ -20,7 +17,6 @@ type ProcessCustomTrackInput = {
 const maxSize = env.MAX_CUSTOM_TRACK_SIZE_MB * 1024 * 1024;
 
 export async function processCustomTrack(input: ProcessCustomTrackInput) {
-
     if (!input.storageKey.startsWith("custom/") || !input.storageKey.endsWith(".mp3")) {
         throw new UnprocessableEntityError(
             "Invalid custom track storage key",
@@ -31,11 +27,17 @@ export async function processCustomTrack(input: ProcessCustomTrackInput) {
     const existingTrack = await findTrackByStorageKey(input.storageKey);
 
     if (existingTrack) {
+        const upload = await findCustomTrackUploadByStorageKey(input.storageKey);
+
+        if (upload) {
+            await deleteCustomTrackUpload(upload.id);
+        }
+
         return existingTrack;
     }
 
     const upload = await findCustomTrackUploadByStorageKey(input.storageKey);
-    console.log("Upload Data in db: ", upload);
+   
 
     if (!upload) {
         throw new NotFoundError("Custom track upload not found", "CUSTOM_TRACK_UPLOAD_NOT_FOUND");
@@ -64,7 +66,7 @@ export async function processCustomTrack(input: ProcessCustomTrackInput) {
     });
 
     const duration = metadata.format.duration;
-    console.log("Duration :", duration);
+   
 
     if (!duration || !Number.isFinite(duration) || duration <= 0) {
         throw new UnprocessableEntityError(

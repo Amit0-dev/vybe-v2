@@ -31,7 +31,7 @@ export async function createYouTubeTrack(input: CreateYoutubeTrackInput) {
     }
 
     try {
-        return createTrack({
+        return await createTrack({
             title: video.title,
             artist: video.channelTitle,
             durationSec: video.durationSec,

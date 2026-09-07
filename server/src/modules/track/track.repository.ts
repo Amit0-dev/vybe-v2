@@ -55,3 +55,9 @@ export async function findTrackByStorageKey(storageKey: string) {
         where: { storageKey },
     });
 }
+
+export async function findTrackById(id: string) {
+    return prisma.track.findUnique({
+        where: { id },
+    });
+}

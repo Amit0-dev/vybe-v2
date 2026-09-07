@@ -8,6 +8,7 @@ import { auth } from "./lib/auth.js";
 import { authRouter } from "./modules/auth/auth.routes.js";
 import { spaceRouter } from "./modules/space/space.routes.js";
 import { trackRouter } from "./modules/track/track.routes.js";
+import { queueRouter } from "./modules/queue/queue.routes.js";
 
 export function createApp() {
     const app = express();
@@ -29,6 +30,7 @@ export function createApp() {
     app.use("/api/user", authRouter);
     app.use("/api/spaces", spaceRouter)
     app.use("/api/tracks", trackRouter);
+    app.use("/api/spaces", queueRouter)
 
     app.use(errorHandler);
 
