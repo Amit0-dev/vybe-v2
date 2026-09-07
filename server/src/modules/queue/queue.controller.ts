@@ -24,7 +24,7 @@ export const addQueueItemController: RequestHandler = async (req, res) => {
 
     const { spaceId } = parseSpaceIdParams(req.params);
 
-    const queueItem = await addTrackToQueue(spaceId, input.trackId);
+    const queueItem = await addTrackToQueue(spaceId, input.trackId, res.locals.user.id);
 
     return res.status(201).json({
         queueItem,

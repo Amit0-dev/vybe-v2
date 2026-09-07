@@ -1,4 +1,9 @@
+import { Prisma } from "../../generated/prisma/client.js";
 import prisma from "../../infra/db.js";
+import { logger } from "../../infra/logger.js";
+import { NotFoundError } from "../../lib/errors.js";
+import { incrementQueueItemScore } from "../queue/queue.ranking.js";
+import { findQueueItemInSpace } from "../queue/queue.repository.js";
 import {
     createQueueItemVote,
     deleteQueueItemVote,
@@ -13,34 +18,80 @@ function calculateVoteDelta(oldValue: VoteValue, newValue: VoteValue) {
     return newValue - oldValue;
 }
 
-export async function voteOnQueueItem(queueItemId: string, userId: string, value: RequestedVote) {
-    return prisma.$transaction(async (tx) => {
-        const existingVote = await findQueueItemVote(tx, queueItemId, userId);
+async function runVoteTransaction(queueItemId: string, userId: string, value: RequestedVote) {
+    for (let attempt = 0; attempt < 2; attempt++) {
+        try {
+            return prisma.$transaction(async (tx) => {
+                const existingVote = await findQueueItemVote(tx, queueItemId, userId);
 
-        const oldValue: VoteValue = existingVote ? (existingVote.value as VoteValue) : 0;
+                const oldValue: VoteValue = existingVote ? (existingVote.value as VoteValue) : 0;
 
-        if (oldValue === value) {
-            return {
-                changed: false,
-                delta: 0,
-                vote: oldValue,
-            };
+                if (oldValue === value) {
+                    return {
+                        changed: false,
+                        delta: 0,
+                        vote: oldValue,
+                    };
+                }
+
+                const delta = calculateVoteDelta(oldValue, value);
+
+                if (!existingVote) {
+                    await createQueueItemVote(tx, queueItemId, userId, value);
+                } else {
+                    await updateQueueItemVote(tx, existingVote.id, value);
+                }
+
+                return {
+                    changed: true,
+                    delta,
+                    vote: value,
+                };
+            });
+        } catch (error) {
+            const isUniqueConflict =
+                error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2002";
+
+            if (!isUniqueConflict || attempt === 1) {
+                throw error;
+            }
         }
+    }
 
-        const delta = calculateVoteDelta(oldValue, value);
+    throw new Error("Vote operation failed");
+}
 
-        if (!existingVote) {
-            await createQueueItemVote(tx, queueItemId, userId, value);
-        } else {
-            await updateQueueItemVote(tx, existingVote.id, value);
+export async function voteOnQueueItem(
+    spaceId: string,
+    queueItemId: string,
+    userId: string,
+    value: RequestedVote,
+) {
+    const queueItem = await findQueueItemInSpace(queueItemId, spaceId);
+
+    if (!queueItem) {
+        throw new NotFoundError("Queue item not found", "QUEUE_ITEM_NOT_FOUND");
+    }
+
+    const result = await runVoteTransaction(queueItemId, userId, value);
+
+    if (result.changed && result.delta !== 0) {
+        try {
+            await incrementQueueItemScore(spaceId, queueItemId, result.delta);
+        } catch (error) {
+            logger.error(
+                {
+                    error,
+                    spaceId,
+                    queueItemId,
+                    delta: result.delta,
+                },
+                "Failed to update Redis queue ranking after vote",
+            );
         }
+    }
 
-        return {
-            changed: true,
-            delta,
-            vote: value,
-        };
-    });
+    return result;
 }
 
 export async function removeVote(queueItemId: string, userId: string) {

@@ -1,7 +1,9 @@
+import { Prisma } from "../../generated/prisma/client.js";
 import { QueueItemStatus } from "../../generated/prisma/enums.js";
 import { logger } from "../../infra/logger.js";
 import { ConflictError, NotFoundError } from "../../lib/errors.js";
 import { findTrackById } from "../track/track.repository.js";
+import { voteOnQueueItem } from "../vote/vote.service.js";
 import { addQueueItem, getQueueRanking, removeQueueItem } from "./queue.ranking.js";
 import {
     createQueueItem,
@@ -12,7 +14,7 @@ import {
     transitionQueueItemStatus,
 } from "./queue.repository.js";
 
-export async function addTrackToQueue(spaceId: string, trackId: string) {
+export async function addTrackToQueue(spaceId: string, trackId: string, userId: string) {
     const track = await findTrackById(trackId);
 
     if (!track) {
@@ -22,25 +24,50 @@ export async function addTrackToQueue(spaceId: string, trackId: string) {
     const existingQueueItem = await findActiveQueueItem(spaceId, trackId);
 
     if (existingQueueItem) {
-        return existingQueueItem;
-    }
+        const voteResult = await voteOnQueueItem(existingQueueItem.id, userId, 1);
 
-    const queueItem = await createQueueItem(trackId, spaceId);
+        return {
+            queueItem: existingQueueItem,
+            action: "VOTED_EXISTING" as const,
+        };
+    }
 
     try {
-        await addQueueItem(spaceId, queueItem.id, queueItem.score);
-    } catch (error) {
-        logger.error(
-            {
-                error,
-                queueItemId: queueItem.id,
-                spaceId,
-            },
-            "Failed to initialize QueueItem in Redis ranking",
-        );
-    }
+        const queueItem = await createQueueItem(trackId, spaceId);
 
-    return queueItem;
+        try {
+            await addQueueItem(spaceId, queueItem.id, queueItem.score);
+        } catch (error) {
+            logger.error(
+                {
+                    error,
+                    queueItemId: queueItem.id,
+                    spaceId,
+                },
+                "Failed to initialize QueueItem in Redis ranking",
+            );
+        }
+
+        return {
+            queueItem,
+            action: "CREATED" as const,
+        };
+    } catch (error) {
+        if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2002") {
+            const existingQueueItem = await findActiveQueueItem(spaceId, trackId);
+
+            if (existingQueueItem) {
+                await voteOnQueueItem(existingQueueItem.id, userId, 1);
+
+                return {
+                    queueItem: existingQueueItem,
+                    action: "VOTED_EXISTING" as const,
+                };
+            }
+        }
+
+        throw error;
+    }
 }
 
 export async function getQueue(spaceId: string) {
@@ -134,44 +161,5 @@ export async function skipQueueItem(spaceId: string, queueItemId: string) {
         throw new NotFoundError("Queue item not found", "QUEUE_ITEM_NOT_FOUND");
     }
 
-    if (
-        queueItem.status !== QueueItemStatus.QUEUED &&
-        queueItem.status !== QueueItemStatus.PLAYING
-    ) {
-        throw new ConflictError("Queue item cannot be skipped", "QUEUE_ITEM_CANNOT_BE_SKIPPED");
-    }
-
-    const result = await transitionQueueItemStatus(
-        queueItem.id,
-        queueItem.status,
-        QueueItemStatus.SKIPPED,
-    );
-
-    if (result.count === 0) {
-        throw new ConflictError(
-            "Queue item state changed by another request",
-            "QUEUE_ITEM_STATE_CHANGED",
-        );
-    }
-
-    const updatedQueueItem = await findQueueItemById(queueItem.id);
-
-    if (!updatedQueueItem) {
-        throw new NotFoundError("Queue item not found", "QUEUE_ITEM_NOT_FOUND");
-    }
-
-    try {
-        await removeQueueItem(spaceId, queueItem.id);
-    } catch (error) {
-        logger.error(
-            {
-                error,
-                queueItemId: queueItem.id,
-                spaceId,
-            },
-            "Failed to remove skipped QueueItem from Redis ranking",
-        );
-    }
-
-    return updatedQueueItem;
+    return transitionQueueItem(queueItem.id, QueueItemStatus.SKIPPED);
 }

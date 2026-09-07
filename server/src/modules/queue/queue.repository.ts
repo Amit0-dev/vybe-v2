@@ -155,3 +155,14 @@ export async function findQueueItemInSpace(queueItemId: string, spaceId: string)
         },
     });
 }
+
+export async function findQueueItemForVote(queueItemId: string) {
+    return prisma.queueItem.findUnique({
+        where: { id: queueItemId },
+        select: {
+            id: true,
+            spaceId: true,
+            status: true,
+        },
+    });
+}
