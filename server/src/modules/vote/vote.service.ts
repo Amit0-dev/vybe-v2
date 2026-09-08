@@ -84,15 +84,17 @@ export async function voteOnQueueItem(
 
     const result = await runVoteTransaction(queueItemId, userId, value);
 
+    let score: number | null = queueItem.score;
+
     if (result.changed && result.delta !== 0) {
         try {
-            const newScore = await incrementQueueItemScore(spaceId, queueItemId, result.delta);
+            score = await incrementQueueItemScore(spaceId, queueItemId, result.delta);
 
             broadcastToSpace(spaceId, {
                 type: RealtimeEvent.QUEUE_ITEM_VOTE_UPDATED,
                 spaceId,
                 queueItemId,
-                score: newScore,
+                score,
             });
             
         } catch (error) {
@@ -108,7 +110,10 @@ export async function voteOnQueueItem(
         }
     }
 
-    return result;
+    return {
+        ...result,
+        score
+    };
 }
 
 export async function removeVote(queueItemId: string, userId: string) {

@@ -86,7 +86,7 @@ export async function batchUpdateQueueItemScores(
         const batch = updates.slice(i, i + SCORE_UPDATE_BATCH_SIZE);
 
         const cases = batch.map(
-            ({ queueItemId, score }) => Prisma.sql`WHEN ${queueItemId} THEN ${score}`,
+            ({ queueItemId, score }) => Prisma.sql`WHEN ${queueItemId} THEN ${score}::integer`,
         );
 
         const ids = batch.map(({ queueItemId }) => queueItemId);

@@ -2,6 +2,8 @@ import { Prisma } from "../../generated/prisma/client.js";
 import { QueueItemStatus } from "../../generated/prisma/enums.js";
 import { logger } from "../../infra/logger.js";
 import { ConflictError, NotFoundError } from "../../lib/errors.js";
+import { RealtimeEvent } from "../../realtime/realtime.events.js";
+import { broadcastToSpace } from "../../realtime/realtime.manager.js";
 import { findTrackById } from "../track/track.repository.js";
 import { voteOnQueueItem } from "../vote/vote.service.js";
 import { addQueueItem, getQueueRanking, removeQueueItem } from "./queue.ranking.js";
@@ -47,6 +49,17 @@ export async function addTrackToQueue(spaceId: string, trackId: string, userId: 
                 "Failed to initialize QueueItem in Redis ranking",
             );
         }
+
+        broadcastToSpace(spaceId, {
+            type: RealtimeEvent.QUEUE_ITEM_ADDED,
+            spaceId,
+            queueItem: {
+                id: queueItem.id,
+                trackId: queueItem.trackId,
+                score: queueItem.score,
+                status: queueItem.status,
+            },
+        });
 
         return {
             queueItem,
@@ -111,7 +124,11 @@ function canTransition(currentStatus: QueueItemStatus, nextStatus: QueueItemStat
     return false;
 }
 
-export async function transitionQueueItem(queueItemId: string, nextStatus: QueueItemStatus) {
+export async function transitionQueueItem(
+    queueItemId: string,
+    nextStatus: QueueItemStatus,
+    spaceId: string,
+) {
     const queueItem = await findQueueItemById(queueItemId);
 
     if (!queueItem) {
@@ -151,6 +168,12 @@ export async function transitionQueueItem(queueItemId: string, nextStatus: Queue
         }
     }
 
+    broadcastToSpace(spaceId, {
+        type: RealtimeEvent.QUEUE_ITEM_SKIPPED,
+        spaceId,
+        queueItemId,
+    });
+
     return updatedQueueItem;
 }
 
@@ -161,5 +184,5 @@ export async function skipQueueItem(spaceId: string, queueItemId: string) {
         throw new NotFoundError("Queue item not found", "QUEUE_ITEM_NOT_FOUND");
     }
 
-    return transitionQueueItem(queueItem.id, QueueItemStatus.SKIPPED);
+    return transitionQueueItem(queueItem.id, QueueItemStatus.SKIPPED, spaceId);
 }
