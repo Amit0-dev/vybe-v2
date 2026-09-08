@@ -1,9 +1,12 @@
 import { Prisma } from "../../generated/prisma/client.js";
 import prisma from "../../infra/db.js";
 import { logger } from "../../infra/logger.js";
-import { NotFoundError } from "../../lib/errors.js";
+import { NotFoundError, TooManyRequestsError } from "../../lib/errors.js";
+import { RealtimeEvent } from "../../realtime/realtime.events.js";
+import { broadcastToSpace } from "../../realtime/realtime.manager.js";
 import { incrementQueueItemScore } from "../queue/queue.ranking.js";
 import { findQueueItemInSpace } from "../queue/queue.repository.js";
+import { acquireVoteCooldown } from "./vote.cooldown.js";
 import {
     createQueueItemVote,
     deleteQueueItemVote,
@@ -67,6 +70,12 @@ export async function voteOnQueueItem(
     userId: string,
     value: RequestedVote,
 ) {
+    const cooldownAcquired = await acquireVoteCooldown(userId, queueItemId);
+
+    if (!cooldownAcquired) {
+        throw new TooManyRequestsError("Please wait before voting again", "VOTE_COOLDOWN");
+    }
+
     const queueItem = await findQueueItemInSpace(queueItemId, spaceId);
 
     if (!queueItem) {
@@ -77,7 +86,15 @@ export async function voteOnQueueItem(
 
     if (result.changed && result.delta !== 0) {
         try {
-            await incrementQueueItemScore(spaceId, queueItemId, result.delta);
+            const newScore = await incrementQueueItemScore(spaceId, queueItemId, result.delta);
+
+            broadcastToSpace(spaceId, {
+                type: RealtimeEvent.QUEUE_ITEM_VOTE_UPDATED,
+                spaceId,
+                queueItemId,
+                score: newScore,
+            });
+            
         } catch (error) {
             logger.error(
                 {

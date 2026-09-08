@@ -24,7 +24,7 @@ export async function addTrackToQueue(spaceId: string, trackId: string, userId: 
     const existingQueueItem = await findActiveQueueItem(spaceId, trackId);
 
     if (existingQueueItem) {
-        const voteResult = await voteOnQueueItem(existingQueueItem.id, userId, 1);
+        const voteResult = await voteOnQueueItem(spaceId, existingQueueItem.id, userId, 1);
 
         return {
             queueItem: existingQueueItem,
@@ -57,7 +57,7 @@ export async function addTrackToQueue(spaceId: string, trackId: string, userId: 
             const existingQueueItem = await findActiveQueueItem(spaceId, trackId);
 
             if (existingQueueItem) {
-                await voteOnQueueItem(existingQueueItem.id, userId, 1);
+                await voteOnQueueItem(spaceId, existingQueueItem.id, userId, 1);
 
                 return {
                     queueItem: existingQueueItem,
