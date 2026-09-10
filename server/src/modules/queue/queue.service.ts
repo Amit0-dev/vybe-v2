@@ -13,6 +13,7 @@ import {
     findQueueItemById,
     findQueueItemInSpace,
     findQueueItemsByIds,
+    markSpaceForReconciliation,
     transitionQueueItemStatus,
 } from "./queue.repository.js";
 
@@ -26,7 +27,7 @@ export async function addTrackToQueue(spaceId: string, trackId: string, userId: 
     const existingQueueItem = await findActiveQueueItem(spaceId, trackId);
 
     if (existingQueueItem) {
-        const voteResult = await voteOnQueueItem(spaceId, existingQueueItem.id, userId, 1);
+        await voteOnQueueItem(spaceId, existingQueueItem.id, userId, 1);
 
         return {
             queueItem: existingQueueItem,
@@ -48,6 +49,18 @@ export async function addTrackToQueue(spaceId: string, trackId: string, userId: 
                 },
                 "Failed to initialize QueueItem in Redis ranking",
             );
+
+            try {
+                await markSpaceForReconciliation(spaceId);
+            } catch (reconciliationError) {
+                logger.error(
+                    {
+                        error: reconciliationError,
+                        spaceId,
+                    },
+                    "Failed to mark Space for queue reconciliation",
+                );
+            }
         }
 
         broadcastToSpace(spaceId, {
@@ -165,14 +178,20 @@ export async function transitionQueueItem(
                 },
                 "Failed to remove inactive QueueItem from Redis ranking",
             );
+
+            try {
+                await markSpaceForReconciliation(queueItem.spaceId);
+            } catch (reconciliationError) {
+                logger.error(
+                    {
+                        error: reconciliationError,
+                        spaceId: queueItem.spaceId,
+                    },
+                    "Failed to mark Space for queue reconciliation",
+                );
+            }
         }
     }
-
-    broadcastToSpace(spaceId, {
-        type: RealtimeEvent.QUEUE_ITEM_SKIPPED,
-        spaceId,
-        queueItemId,
-    });
 
     return updatedQueueItem;
 }
@@ -184,5 +203,17 @@ export async function skipQueueItem(spaceId: string, queueItemId: string) {
         throw new NotFoundError("Queue item not found", "QUEUE_ITEM_NOT_FOUND");
     }
 
-    return transitionQueueItem(queueItem.id, QueueItemStatus.SKIPPED, spaceId);
+    const updatedQueueItem = await transitionQueueItem(
+        queueItem.id,
+        QueueItemStatus.SKIPPED,
+        spaceId,
+    );
+
+    broadcastToSpace(spaceId, {
+        type: RealtimeEvent.QUEUE_ITEM_SKIPPED,
+        spaceId,
+        queueItemId,
+    });
+
+    return updatedQueueItem;
 }

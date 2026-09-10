@@ -5,7 +5,7 @@ import { NotFoundError, TooManyRequestsError } from "../../lib/errors.js";
 import { RealtimeEvent } from "../../realtime/realtime.events.js";
 import { broadcastToSpace } from "../../realtime/realtime.manager.js";
 import { incrementQueueItemScore } from "../queue/queue.ranking.js";
-import { findQueueItemInSpace } from "../queue/queue.repository.js";
+import { findQueueItemInSpace, markSpaceForReconciliation } from "../queue/queue.repository.js";
 import { acquireVoteCooldown } from "./vote.cooldown.js";
 import {
     createQueueItemVote,
@@ -96,7 +96,6 @@ export async function voteOnQueueItem(
                 queueItemId,
                 score,
             });
-            
         } catch (error) {
             logger.error(
                 {
@@ -107,35 +106,23 @@ export async function voteOnQueueItem(
                 },
                 "Failed to update Redis queue ranking after vote",
             );
+
+            try {
+                await markSpaceForReconciliation(spaceId);
+            } catch (reconciliationError) {
+                logger.error(
+                    {
+                        error: reconciliationError,
+                        spaceId,
+                    },
+                    "Failed to mark Space for queue reconciliation",
+                );
+            }
         }
     }
 
     return {
         ...result,
-        score
+        score,
     };
-}
-
-export async function removeVote(queueItemId: string, userId: string) {
-    return prisma.$transaction(async (tx) => {
-        const existingVote = await findQueueItemVote(tx, queueItemId, userId);
-
-        if (!existingVote) {
-            return {
-                changed: false,
-                delta: 0,
-                vote: 0,
-            };
-        }
-
-        const delta = -existingVote.value;
-
-        await deleteQueueItemVote(tx, existingVote.id);
-
-        return {
-            changed: true,
-            delta,
-            vote: 0,
-        };
-    });
 }

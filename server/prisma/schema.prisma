@@ -103,9 +103,10 @@ model Space {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  owner        User          @relation("OwnedSpaces", fields: [ownerId], references: [id])
-  spaceMembers SpaceMember[]
-  queueItems   QueueItem[]
+  owner                User                  @relation("OwnedSpaces", fields: [ownerId], references: [id])
+  spaceMembers         SpaceMember[]
+  queueItems           QueueItem[]
+  queueReconciliations QueueReconciliation?
 
   @@index([ownerId])
 }
@@ -197,4 +198,12 @@ model QueueItemVote {
 
   @@unique([queueItemId, userId])
   @@index([userId])
+}
+
+model QueueReconciliation {
+  spaceId   String   @id
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  space Space @relation(fields: [spaceId], references: [id], onDelete: Cascade)
 }

@@ -1,4 +1,3 @@
-import { logger } from "../../infra/logger.js";
 import { getQueueRanking, repairQueueRanking } from "./queue.ranking.js";
 import {
     batchUpdateQueueItemScores,
@@ -14,17 +13,7 @@ export type Repair = {
 export async function reconcileSpaceQueue(spaceId: string) {
     const expectedScores = await reconcilePostgresProjection(spaceId);
 
-    try {
-        await reconcileRedisProjection(spaceId, expectedScores);
-    } catch (error) {
-        logger.error(
-            {
-                error,
-                spaceId,
-            },
-            "Redis reconciliation failed",
-        );
-    }
+    await reconcileRedisProjection(spaceId, expectedScores);
 }
 
 async function reconcilePostgresProjection(spaceId: string) {
@@ -53,6 +42,7 @@ async function reconcilePostgresProjection(spaceId: string) {
         }
     }
 
+    console.log("POSTGRES REPAIRS : ", repairs)
     if (repairs.length > 0) {
         await batchUpdateQueueItemScores(repairs);
     }
@@ -88,5 +78,10 @@ async function reconcileRedisProjection(spaceId: string, expectedScores: Map<str
         }
     }
 
+    console.log({
+        removals,
+        scoreUpdates,
+        spaceId
+    })
     await repairQueueRanking(spaceId, scoreUpdates, removals);
 }

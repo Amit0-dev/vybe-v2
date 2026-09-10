@@ -166,3 +166,33 @@ export async function findQueueItemForVote(queueItemId: string) {
         },
     });
 }
+
+// for dirty marker
+
+export async function markSpaceForReconciliation(spaceId: string) {
+    return prisma.queueReconciliation.upsert({
+        where: {
+            spaceId,
+        },
+        create: {
+            spaceId,
+        },
+        update: {},
+    });
+}
+
+export async function findPendingReconciliationSpaces() {
+    return prisma.queueReconciliation.findMany({
+        select: {
+            spaceId: true,
+        },
+    });
+}
+
+export async function clearSpaceReconciliation(spaceId: string) {
+    return prisma.queueReconciliation.deleteMany({
+        where: {
+            spaceId,
+        },
+    });
+}
