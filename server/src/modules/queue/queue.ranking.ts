@@ -86,3 +86,7 @@ export async function repairQueueRanking(
 
     await multi.exec();
 }
+
+export async function getPlaybackCandidates(spaceId: string) {
+    return redis.zRangeWithScores(getRankingKey(spaceId), 0, -1, { REV: true });
+}

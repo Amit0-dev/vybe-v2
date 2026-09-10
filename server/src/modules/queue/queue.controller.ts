@@ -4,6 +4,7 @@ import { addTrackToQueue, getQueue, skipQueueItem } from "./queue.service.js";
 import { parseSpaceIdParams } from "../../middleware/space.middleware.js";
 import { z } from "zod";
 import { BadRequestError } from "../../lib/errors.js";
+import { skipPlayback } from "../playback/playback.service.js";
 
 const paramsSchema = z.object({
     queueItemId: z.string().trim().min(1, "queueItemId is missing"),
@@ -45,7 +46,7 @@ export const skipQueueItemController: RequestHandler = async (req, res) => {
     const { queueItemId } = parseQueueItemIdParams(req.params);
     const { spaceId } = parseSpaceIdParams(req.params);
 
-    const queueItem = await skipQueueItem(spaceId, queueItemId);
+    const queueItem = await skipPlayback(spaceId, queueItemId);
 
     return res.status(200).json({
         queueItem,

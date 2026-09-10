@@ -10,6 +10,17 @@ export async function findQueueItemById(queueItemId: string) {
     });
 }
 
+export async function findQueueItemForPlayback(queueItemId: string) {
+    return prisma.queueItem.findUnique({
+        where: {
+            id: queueItemId,
+        },
+        include: {
+            track: true,
+        },
+    });
+}
+
 export async function findActiveQueueItem(spaceId: string, trackId: string) {
     return prisma.queueItem.findFirst({
         where: {
@@ -146,6 +157,33 @@ export async function transitionQueueItemStatus(
         },
     });
 }
+
+// For Playback -- START
+export async function claimQueueItem(queueItemId: string, spaceId: string) {
+    return prisma.queueItem.updateMany({
+        where: {
+            id: queueItemId,
+            spaceId,
+            status: QueueItemStatus.QUEUED,
+        },
+        data: {
+            status: QueueItemStatus.PLAYING,
+        },
+    });
+}
+
+export async function findPlayingQueueItem(spaceId: string) {
+    return prisma.queueItem.findFirst({
+        where: {
+            spaceId,
+            status: QueueItemStatus.PLAYING,
+        },
+        include: {
+            track: true,
+        },
+    });
+}
+// -- END
 
 export async function findQueueItemInSpace(queueItemId: string, spaceId: string) {
     return prisma.queueItem.findFirst({

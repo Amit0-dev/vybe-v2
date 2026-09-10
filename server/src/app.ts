@@ -10,6 +10,7 @@ import { spaceRouter } from "./modules/space/space.routes.js";
 import { trackRouter } from "./modules/track/track.routes.js";
 import { queueRouter } from "./modules/queue/queue.routes.js";
 import { voteRouter } from "./modules/vote/vote.routes.js";
+import { playbackRouter } from "./modules/playback/playback.routes.js";
 
 export function createApp() {
     const app = express();
@@ -32,7 +33,8 @@ export function createApp() {
     app.use("/api/spaces", spaceRouter)
     app.use("/api/tracks", trackRouter);
     app.use("/api/spaces", queueRouter);
-    app.use("/api/spaces", voteRouter)
+    app.use("/api/spaces", voteRouter);
+    app.use("/api/spaces", playbackRouter);
 
     app.use(errorHandler);
 

@@ -140,7 +140,6 @@ function canTransition(currentStatus: QueueItemStatus, nextStatus: QueueItemStat
 export async function transitionQueueItem(
     queueItemId: string,
     nextStatus: QueueItemStatus,
-    spaceId: string,
 ) {
     const queueItem = await findQueueItemById(queueItemId);
 
@@ -206,7 +205,6 @@ export async function skipQueueItem(spaceId: string, queueItemId: string) {
     const updatedQueueItem = await transitionQueueItem(
         queueItem.id,
         QueueItemStatus.SKIPPED,
-        spaceId,
     );
 
     broadcastToSpace(spaceId, {
