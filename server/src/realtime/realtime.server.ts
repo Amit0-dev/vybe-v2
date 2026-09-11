@@ -5,9 +5,13 @@ import { auth } from "../lib/auth.js";
 import { fromNodeHeaders } from "better-auth/node";
 import { findUserById } from "../modules/auth/auth.repository.js";
 import { findMembership } from "../modules/space/space.repository.js";
-import { addConnection, removeConnection } from "./realtime.manager.js";
+import { addConnection, isUserConnectedToSpace, removeConnection } from "./realtime.manager.js";
+import {
+    handleUserConnected,
+    handleUserDisconnected,
+} from "../modules/playback/playback.service.js";
 
-interface RealtimeSocket extends WebSocket {
+export interface RealtimeSocket extends WebSocket {
     userId: string;
     spaceId: string;
 }
@@ -63,10 +67,43 @@ export function initializeRealtime(server: Server) {
 
             logger.info({ userId: user.id, spaceId }, "WebSocket client connected");
 
-            socket.on("close", () => {
+            try {
+                await handleUserConnected(spaceId, user.id);
+            } catch (error) {
+                logger.error(
+                    {
+                        err: error,
+                        userId: user.id,
+                        spaceId,
+                    },
+                    "Failed to handle user connection",
+                );
+            }
+
+            socket.on("close", async () => {
                 removeConnection(spaceId, realtimeSocket);
 
-                logger.info({ userId: user.id, spaceId }, "WebSocket client disconnected");
+                const stillConnected = isUserConnectedToSpace(spaceId, user.id);
+
+                logger.info(
+                    { userId: user.id, spaceId, stillConnected },
+                    "WebSocket client disconnected",
+                );
+
+                if (!stillConnected) {
+                    try {
+                        await handleUserDisconnected(spaceId, user.id);
+                    } catch (error) {
+                        logger.error(
+                            {
+                                err: error,
+                                userId: user.id,
+                                spaceId,
+                            },
+                            "Failed to handle user disconnect",
+                        );
+                    }
+                }
             });
 
             socket.on("error", (error) => {

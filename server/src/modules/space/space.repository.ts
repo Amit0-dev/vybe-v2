@@ -1,3 +1,4 @@
+import { SpaceStatus } from "../../generated/prisma/enums.js";
 import prisma from "../../infra/db.js";
 
 type CreateSpaceRecord = {
@@ -110,6 +111,18 @@ export async function closeSpace(spaceId: string) {
             name: true,
             status: true,
             updatedAt: true,
+        },
+    });
+}
+
+export async function deactivateSpace(spaceId: string) {
+    return prisma.space.updateMany({
+        where: {
+            id: spaceId,
+            status: SpaceStatus.ACTIVE,
+        },
+        data: {
+            status: SpaceStatus.CLOSED,
         },
     });
 }

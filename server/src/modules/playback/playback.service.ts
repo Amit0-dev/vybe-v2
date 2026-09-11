@@ -1,4 +1,4 @@
-import { Prisma, QueueItemStatus } from "../../generated/prisma/client.js";
+import { Prisma, QueueItemStatus, SpaceStatus } from "../../generated/prisma/client.js";
 import { NotFoundError } from "../../lib/errors.js";
 import { RealtimeEvent } from "../../realtime/realtime.events.js";
 import { broadcastToSpace } from "../../realtime/realtime.manager.js";
@@ -11,6 +11,8 @@ import {
     findQueueItemInSpace,
 } from "../queue/queue.repository.js";
 import { skipQueueItem, transitionQueueItem } from "../queue/queue.service.js";
+import { findSpaceById } from "../space/space.repository.js";
+import { clearOwnerOffline, markOwnerOffline } from "./playback.presence.js";
 
 export async function startNextTrack(spaceId: string) {
     // If something is already playing, return it
@@ -111,4 +113,52 @@ export async function skipPlayback(spaceId: string, queueItemId: string) {
         skippedQueueItem,
         nextQueueItem,
     };
+}
+
+export async function getPlaybackState(spaceId: string) {
+    return findPlayingQueueItem(spaceId);
+}
+
+export async function handleUserDisconnected(spaceId: string, userId: string) {
+    const space = await findSpaceById(spaceId);
+
+    if (!space) {
+        return;
+    }
+
+    if (space.ownerId !== userId) {
+        return;
+    }
+
+    if (space.status !== SpaceStatus.ACTIVE) {
+        return;
+    }
+
+    await markOwnerOffline(spaceId);
+}
+
+export async function handleUserConnected(spaceId: string, userId: string) {
+    const space = await findSpaceById(spaceId);
+
+    if (!space) {
+        return;
+    }
+
+    if (space.ownerId !== userId) {
+        return;
+    }
+
+    await clearOwnerOffline(spaceId);
+}
+
+export async function shutdownPlayback(spaceId: string) {
+    const playingQueueItem = await findPlayingQueueItem(spaceId);
+
+    if (!playingQueueItem) {
+        return null;
+    }
+
+    const skippedQueueItem = await skipQueueItem(spaceId, playingQueueItem.id);
+
+    return skippedQueueItem;
 }

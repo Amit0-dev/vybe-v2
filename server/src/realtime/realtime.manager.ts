@@ -1,19 +1,20 @@
 import { WebSocket } from "ws";
+import { RealtimeSocket } from "./realtime.server.js";
 
-const spaceConnections = new Map<string, Set<WebSocket>>();
+const spaceConnections = new Map<string, Set<RealtimeSocket>>();
 
-export function addConnection(spaceId: string, socket: WebSocket) {
+export function addConnection(spaceId: string, socket: RealtimeSocket) {
     let connections = spaceConnections.get(spaceId);
 
     if (!connections) {
-        connections = new Set<WebSocket>();
+        connections = new Set<RealtimeSocket>();
         spaceConnections.set(spaceId, connections);
     }
 
     connections.add(socket);
 }
 
-export function removeConnection(spaceId: string, socket: WebSocket) {
+export function removeConnection(spaceId: string, socket: RealtimeSocket) {
     const connections = spaceConnections.get(spaceId);
 
     if (!connections) {
@@ -45,4 +46,23 @@ export function broadcastToSpace(spaceId: string, event: unknown) {
             socket.send(message);
         }
     }
+}
+
+export function isUserConnectedToSpace(
+    spaceId: string,
+    userId: string
+) {
+    const connections = spaceConnections.get(spaceId);
+
+    if(!connections) {
+        return false
+    }
+
+    for(const socket of connections) {
+        if(socket.userId === userId) {
+            return true
+        }
+    }
+
+    return false;
 }

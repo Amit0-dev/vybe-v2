@@ -1,5 +1,6 @@
 import { acquireLock, releaseLock } from "../infra/distributed-lock.js";
 import { logger } from "../infra/logger.js";
+import { handleOwnerRecovery } from "../modules/playback/playback.recovery.js";
 import { reconcileSpaceQueue } from "../modules/queue/queue.reconciliation.js";
 import {
     clearSpaceReconciliation,
@@ -50,6 +51,7 @@ export async function startQueueReconciliationWorker() {
     while (true) {
         try {
             await reconcileSpaces();
+            await handleOwnerRecovery();
         } catch (error) {
             logger.error(
                 {
