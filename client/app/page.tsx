@@ -1,4 +1,5 @@
 import Link from "next/link";
+import type { Metadata } from "next";
 import { SiteHeader } from "@/components/layout/SiteHeader";
 import { Container } from "@/components/layout/Container";
 import { Hero } from "@/features/landing/Hero";
@@ -7,6 +8,14 @@ import { HowItWorks } from "@/features/landing/HowItWorks";
 import { LandingCta } from "@/features/landing/LandingCta";
 import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+
+export const metadata: Metadata = {
+  title: {
+    absolute: "Vybe — Music, together",
+  },
+  description:
+    "Vybe — collaborative music queues for parties and hangouts. One room, one queue, everyone's pick.",
+};
 
 export default function LandingPage() {
   return (

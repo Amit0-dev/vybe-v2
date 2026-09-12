@@ -1,8 +1,15 @@
 import Link from "next/link";
+import type { Metadata } from "next";
 import { SiteHeader } from "@/components/layout/SiteHeader";
 import { Container } from "@/components/layout/Container";
 import { SpacesGrid } from "@/features/spaces/SpacesGrid";
 import type { SpaceSummary } from "@/lib/types";
+
+export const metadata: Metadata = {
+  title: "Spaces",
+  description:
+    "Browse and open your Vybe Spaces. Create a room, invite friends, and queue music together.",
+};
 
 /** UI placeholders — replace with API data when wiring the backend */
 const DEMO_SPACES: SpaceSummary[] = [

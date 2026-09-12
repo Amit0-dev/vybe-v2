@@ -2,6 +2,7 @@ import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Container } from "@/components/layout/Container";
+import { ThemeToggle } from "@/components/theme/ThemeToggle";
 import type { SpaceMember } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
@@ -62,7 +63,7 @@ export function SpaceHeader({
           </div>
         </div>
 
-        <div className="flex shrink-0 items-center gap-3">
+        <div className="flex shrink-0 items-center gap-2 sm:gap-3">
           {members.length > 0 && (
             <div className="hidden items-center -space-x-2 sm:flex" aria-label="Members">
               {members.slice(0, 4).map((member) => (
@@ -85,6 +86,7 @@ export function SpaceHeader({
               )}
             </div>
           )}
+          <ThemeToggle />
           {actions}
         </div>
       </Container>

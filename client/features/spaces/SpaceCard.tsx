@@ -13,26 +13,26 @@ const ACCENT_STYLES: Record<
   SpaceCardAccent,
   { card: string; wash: string; chip: string; icon: string }
 > = {
-  /* Primary teal wash — closest to brand */
+  /* Primary teal wash — closest to brand (adapts via --primary / --background) */
   sage: {
-    card: "border-[color-mix(in_srgb,#1c6056_20%,transparent)] bg-[color-mix(in_srgb,#1c6056_9%,#ffffeb)]",
-    wash: "from-[color-mix(in_srgb,#1c6056_18%,transparent)]",
-    chip: "bg-[color-mix(in_srgb,#1c6056_14%,transparent)] text-[#1c6056]",
-    icon: "bg-[color-mix(in_srgb,#1c6056_14%,transparent)] text-[#1c6056]",
+    card: "border-[color-mix(in_srgb,var(--primary)_20%,transparent)] bg-[color-mix(in_srgb,var(--primary)_9%,var(--background))]",
+    wash: "from-[color-mix(in_srgb,var(--primary)_18%,transparent)]",
+    chip: "bg-[color-mix(in_srgb,var(--primary)_14%,transparent)] text-primary",
+    icon: "bg-[color-mix(in_srgb,var(--primary)_14%,transparent)] text-primary",
   },
-  /* Deeper forest mix of the same green */
+  /* Deeper forest mix of the same green family */
   moss: {
-    card: "border-[color-mix(in_srgb,#143f39_22%,transparent)] bg-[color-mix(in_srgb,#143f39_11%,#ffffeb)]",
-    wash: "from-[color-mix(in_srgb,#143f39_20%,transparent)]",
-    chip: "bg-[color-mix(in_srgb,#143f39_14%,transparent)] text-[#143f39]",
-    icon: "bg-[color-mix(in_srgb,#143f39_14%,transparent)] text-[#143f39]",
+    card: "border-[color-mix(in_srgb,var(--primary)_28%,transparent)] bg-[color-mix(in_srgb,var(--primary)_14%,var(--background))]",
+    wash: "from-[color-mix(in_srgb,var(--primary)_22%,transparent)]",
+    chip: "bg-[color-mix(in_srgb,var(--primary)_18%,transparent)] text-primary",
+    icon: "bg-[color-mix(in_srgb,var(--primary)_18%,transparent)] text-primary",
   },
-  /* Soft mist — barely-there teal on cream */
+  /* Soft mist — barely-there teal */
   mist: {
-    card: "border-[color-mix(in_srgb,#1c6056_14%,transparent)] bg-[color-mix(in_srgb,#1c6056_4%,#ffffeb)]",
-    wash: "from-[color-mix(in_srgb,#1c6056_10%,transparent)]",
-    chip: "bg-[color-mix(in_srgb,#1c6056_10%,transparent)] text-[#1c6056]",
-    icon: "bg-[color-mix(in_srgb,#1c6056_10%,transparent)] text-[#1c6056]",
+    card: "border-[color-mix(in_srgb,var(--primary)_14%,transparent)] bg-[color-mix(in_srgb,var(--primary)_4%,var(--background))]",
+    wash: "from-[color-mix(in_srgb,var(--primary)_10%,transparent)]",
+    chip: "bg-[color-mix(in_srgb,var(--primary)_10%,transparent)] text-primary",
+    icon: "bg-[color-mix(in_srgb,var(--primary)_10%,transparent)] text-primary",
   },
 };
 
@@ -74,7 +74,7 @@ export function SpaceCard({
       className={cn(
         "group relative flex min-h-[176px] flex-col justify-between overflow-hidden rounded-2xl border p-5 transition-all duration-200",
         styles.card,
-        "hover:-translate-y-0.5 hover:shadow-[0_16px_32px_-24px_color-mix(in_srgb,#1c6056_55%,transparent)]",
+        "hover:-translate-y-0.5 hover:shadow-[0_16px_32px_-24px_color-mix(in_srgb,var(--primary)_55%,transparent)]",
         "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
         className,
       )}
@@ -139,7 +139,7 @@ export function SpaceCard({
         </div>
       </div>
 
-      <div className="relative mt-5 flex items-center gap-2 border-t border-[color-mix(in_srgb,#1c6056_12%,transparent)] pt-4 text-sm text-muted-foreground">
+      <div className="relative mt-5 flex items-center gap-2 border-t border-[color-mix(in_srgb,var(--primary)_12%,transparent)] pt-4 text-sm text-muted-foreground">
         <Music2 className="size-3.5 shrink-0 text-primary/70" aria-hidden />
         {nowPlaying ? (
           <span className="truncate">

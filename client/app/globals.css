@@ -92,36 +92,46 @@
 }
 
 .dark {
-  /* Keep a dark fallback if ever toggled — green still leads */
-  --background: #0f1f1c;
-  --foreground: #ffffeb;
-  --card: #152824;
-  --card-foreground: #ffffeb;
-  --popover: #152824;
-  --popover-foreground: #ffffeb;
-  --primary: #3d9a8a;
-  --primary-foreground: #0f1f1c;
-  --secondary: #1a322e;
-  --secondary-foreground: #ffffeb;
-  --muted: #1a322e;
-  --muted-foreground: #a8c0ba;
-  --accent: #1f3d38;
-  --accent-foreground: #ffffeb;
-  --destructive: #e07068;
-  --border: color-mix(in srgb, #ffffeb 12%, transparent);
-  --input: color-mix(in srgb, #ffffeb 14%, transparent);
-  --ring: #3d9a8a;
-  --vybe: #3d9a8a;
-  --vybe-foreground: #0f1f1c;
-  --vybe-muted: color-mix(in srgb, #3d9a8a 18%, transparent);
-  --sidebar: #152824;
-  --sidebar-foreground: #ffffeb;
-  --sidebar-primary: #3d9a8a;
-  --sidebar-primary-foreground: #0f1f1c;
-  --sidebar-accent: #1f3d38;
-  --sidebar-accent-foreground: #ffffeb;
-  --sidebar-border: color-mix(in srgb, #ffffeb 12%, transparent);
-  --sidebar-ring: #3d9a8a;
+  /*
+    Soft forest night — same cream + teal family as light.
+    Warm charcoal base (not neon mint), paper-cream text, muted sage primary.
+  */
+  --background: #121916;
+  --foreground: #f3f1e6;
+  --card: #1a221f;
+  --card-foreground: #f3f1e6;
+  --popover: #1e2824;
+  --popover-foreground: #f3f1e6;
+  /* Muted sage — readable on dark without looking fluorescent */
+  --primary: #6ea89c;
+  --primary-foreground: #101714;
+  --secondary: #232c29;
+  --secondary-foreground: #d9e4df;
+  --muted: #1f2825;
+  --muted-foreground: #9aaba4;
+  --accent: #24302c;
+  --accent-foreground: #e6efe9;
+  --destructive: #d97a72;
+  /* Soft cream hairlines instead of loud teal borders */
+  --border: color-mix(in srgb, #f3f1e6 11%, transparent);
+  --input: color-mix(in srgb, #f3f1e6 14%, transparent);
+  --ring: #6ea89c;
+  --vybe: #6ea89c;
+  --vybe-foreground: #101714;
+  --vybe-muted: color-mix(in srgb, #6ea89c 14%, transparent);
+  --chart-1: #6ea89c;
+  --chart-2: #5a9488;
+  --chart-3: #487a70;
+  --chart-4: #8fb5ac;
+  --chart-5: #b5ccc5;
+  --sidebar: #1a221f;
+  --sidebar-foreground: #f3f1e6;
+  --sidebar-primary: #6ea89c;
+  --sidebar-primary-foreground: #101714;
+  --sidebar-accent: #24302c;
+  --sidebar-accent-foreground: #e6efe9;
+  --sidebar-border: color-mix(in srgb, #f3f1e6 11%, transparent);
+  --sidebar-ring: #6ea89c;
 }
 
 @layer base {
@@ -154,8 +164,8 @@
     font-family: var(--font-heading);
   }
   ::selection {
-    background: color-mix(in srgb, #1c6056 28%, transparent);
-    color: #0f1f1c;
+    background: color-mix(in srgb, var(--primary) 28%, transparent);
+    color: var(--foreground);
   }
 }
 
@@ -170,17 +180,32 @@
   height: 0;
 }
 
-/* Soft green wash on cream */
+/* Soft green wash — uses theme tokens so light & dark both stay on-brand */
 .vybe-stage {
   background:
     radial-gradient(
       ellipse 80% 50% at 50% -10%,
-      color-mix(in srgb, #1c6056 8%, transparent),
+      color-mix(in srgb, var(--primary) 10%, transparent),
       transparent 55%
     ),
     radial-gradient(
       ellipse 50% 35% at 100% 80%,
-      color-mix(in srgb, #1c6056 5%, transparent),
+      color-mix(in srgb, var(--primary) 6%, transparent),
+      transparent
+    ),
+    var(--background);
+}
+
+.dark .vybe-stage {
+  background:
+    radial-gradient(
+      ellipse 70% 45% at 50% -8%,
+      color-mix(in srgb, var(--primary) 8%, transparent),
+      transparent 55%
+    ),
+    radial-gradient(
+      ellipse 45% 30% at 100% 90%,
+      color-mix(in srgb, #f3f1e6 3%, transparent),
       transparent
     ),
     var(--background);

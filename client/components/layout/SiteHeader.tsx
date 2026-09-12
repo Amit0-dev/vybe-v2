@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { Container } from "@/components/layout/Container";
+import { ThemeToggle } from "@/components/theme/ThemeToggle";
 import { cn } from "@/lib/utils";
 
 interface SiteHeaderProps {
@@ -20,7 +21,8 @@ export function SiteHeader({
     <header
       className={cn(
         "z-20 w-full",
-        variant === "solid" && "border-b border-border/70 bg-background/80 backdrop-blur-md",
+        variant === "solid" &&
+          "border-b border-border/70 bg-background/80 backdrop-blur-md",
         variant === "overlay" && "absolute inset-x-0 top-0",
         className,
       )}
@@ -39,7 +41,10 @@ export function SiteHeader({
             </span>
           )}
         </div>
-        {right}
+        <div className="flex items-center gap-1 sm:gap-2">
+          <ThemeToggle />
+          {right}
+        </div>
       </Container>
     </header>
   );

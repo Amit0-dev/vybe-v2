@@ -1,9 +1,31 @@
+import type { Metadata } from "next";
 import { SpaceDemoRoom } from "@/features/space/SpaceDemoRoom";
 import type { LibraryTrack, QueueItem } from "@/lib/types";
 
 interface SpacePageProps {
   params: Promise<{ spaceId: string }>;
   searchParams: Promise<{ role?: string }>;
+}
+
+/** Demo display name — replace with API space.name when wiring the backend */
+const DEMO_SPACE_NAME = "Friday Night";
+
+export async function generateMetadata({
+  searchParams,
+}: SpacePageProps): Promise<Metadata> {
+  const { role } = await searchParams;
+  const isOwner = role === "owner";
+
+  const title = isOwner
+    ? `${DEMO_SPACE_NAME} (Host)`
+    : DEMO_SPACE_NAME;
+
+  return {
+    title,
+    description: isOwner
+      ? `Hosting ${DEMO_SPACE_NAME} on Vybe — control playback and manage the shared queue.`
+      : `Joined ${DEMO_SPACE_NAME} on Vybe — add tracks, vote, and shape what plays next.`,
+  };
 }
 
 /** UI placeholders — replace with API/WebSocket data later */
@@ -159,7 +181,7 @@ export default async function SpacePage({
 
   return (
     <SpaceDemoRoom
-      spaceName="Friday Night"
+      spaceName={DEMO_SPACE_NAME}
       isOwner={isOwner}
       isOwnerOnline
       ownerName="Host"
