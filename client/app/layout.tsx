@@ -34,7 +34,7 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`dark ${zenKaku.variable} ${notoSansJp.variable} ${geistMono.variable} h-full antialiased`}
+      className={`${zenKaku.variable} ${notoSansJp.variable} ${geistMono.variable} h-full antialiased`}
     >
       <body className="flex min-h-full flex-col bg-background font-sans text-foreground">
         <TooltipProvider>{children}</TooltipProvider>

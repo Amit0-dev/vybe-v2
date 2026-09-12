@@ -14,7 +14,7 @@ export function Hero() {
           <h1 className="font-heading text-4xl font-semibold tracking-[-0.03em] text-balance sm:text-5xl md:text-6xl lg:text-7xl">
             One room. One queue.
             <br />
-            <span className="text-primary">Everyone&apos;s pick.</span>
+            <span className="text-primary italic">Everyone&apos;s pick.</span>
           </h1>
           <p className="font-heading mt-4 max-w-lg text-lg font-medium tracking-tight text-foreground/90 sm:mt-5 sm:text-xl md:text-2xl">
             Let others choose the next track.

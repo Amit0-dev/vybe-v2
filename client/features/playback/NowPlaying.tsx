@@ -29,7 +29,7 @@ export function NowPlaying({
   return (
     <section
       className={cn(
-        "relative flex h-full flex-col overflow-hidden rounded-xl border border-border/80 bg-card",
+        "relative flex flex-col overflow-hidden rounded-xl border border-border/80 bg-card",
         className,
       )}
       aria-label="Now playing"
@@ -48,26 +48,26 @@ export function NowPlaying({
         </span>
       </div>
 
-      <div className="flex flex-1 flex-col items-center justify-center px-6 py-8">
+      <div className="flex flex-col items-center px-5 py-5 sm:px-6 sm:py-6">
         {!track ? (
           <>
-            <div className="flex size-40 items-center justify-center rounded-lg border border-dashed border-border bg-background/50 sm:size-48">
+            <div className="flex size-28 items-center justify-center rounded-lg border border-dashed border-border bg-background/50 sm:size-32">
               <Music2
-                className="size-10 text-muted-foreground/35"
+                className="size-8 text-muted-foreground/35"
                 aria-hidden
               />
             </div>
-            <h2 className="font-heading mt-6 text-lg font-medium tracking-tight">
+            <h2 className="font-heading mt-4 text-base font-medium tracking-tight sm:text-lg">
               Ready when you are
             </h2>
-            <p className="mt-2 max-w-[240px] text-center text-sm leading-relaxed text-muted-foreground">
+            <p className="mt-1.5 max-w-[240px] text-center text-sm leading-relaxed text-muted-foreground">
               Audio plays on your browser. Start a track when the queue looks
               good.
             </p>
           </>
         ) : (
           <>
-            <div className="relative aspect-square w-full max-w-[240px] overflow-hidden rounded-lg border border-border/50 shadow-[0_20px_40px_-20px_oklch(0.58_0.2_28_/_0.45)]">
+            <div className="relative aspect-square w-full max-w-[200px] overflow-hidden rounded-lg border border-border/50 shadow-[0_20px_40px_-20px_oklch(0.58_0.2_28_/_0.45)]">
               {track.artworkUrl ? (
                 // eslint-disable-next-line @next/next/no-img-element
                 <img
@@ -77,12 +77,12 @@ export function NowPlaying({
                 />
               ) : (
                 <div className="flex size-full items-center justify-center bg-gradient-to-br from-primary/20 via-card to-muted">
-                  <Music2 className="size-12 text-primary/70" aria-hidden />
+                  <Music2 className="size-10 text-primary/70" aria-hidden />
                 </div>
               )}
             </div>
 
-            <h2 className="font-heading mt-6 w-full text-center text-xl font-medium tracking-tight text-balance">
+            <h2 className="font-heading mt-4 w-full text-center text-lg font-medium tracking-tight text-balance sm:text-xl">
               {track.title}
             </h2>
             {track.artist && (
@@ -94,10 +94,10 @@ export function NowPlaying({
             <ProgressBar
               currentSec={progressSec}
               durationSec={track.durationSec ?? 0}
-              className="mt-6 w-full"
+              className="mt-5 w-full"
             />
 
-            <div className="mt-5">
+            <div className="mt-4">
               <PlaybackPlayer
                 isOwner
                 isPlaying={isPlaying}

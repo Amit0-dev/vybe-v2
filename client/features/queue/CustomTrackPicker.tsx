@@ -67,7 +67,7 @@ export function CustomTrackPicker({
       </div>
 
       {tracks.length === 0 ? (
-        <div className="flex flex-col items-center justify-center rounded-xl border border-dashed border-border px-6 py-14 text-center">
+        <div className="flex flex-col items-center justify-center rounded-xl border border-dashed border-border px-6 py-10 text-center">
           <Music2 className="size-8 text-muted-foreground/40" aria-hidden />
           <p className="font-heading mt-3 text-sm font-medium">
             No tracks in storage
@@ -82,7 +82,7 @@ export function CustomTrackPicker({
         </div>
       ) : (
         <ul
-          className="grid max-h-[min(52vh,420px)] gap-2 overflow-y-auto pr-0.5 sm:grid-cols-2"
+          className="scrollbar-hide grid max-h-[min(58vh,480px)] gap-2.5 overflow-y-auto sm:grid-cols-2"
           role="listbox"
           aria-label="Library tracks"
         >

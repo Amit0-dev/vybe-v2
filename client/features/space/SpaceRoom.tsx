@@ -3,7 +3,9 @@
 import { SpaceHeader } from "@/features/space/SpaceHeader";
 import { OwnerPresence } from "@/features/space/OwnerPresence";
 import { NowPlaying } from "@/features/playback/NowPlaying";
+import { FloatingNowPlaying } from "@/features/playback/FloatingNowPlaying";
 import { NowPlayingPreview } from "@/features/playback/NowPlayingPreview";
+import { FloatingNowPlayingPreview } from "@/features/playback/FloatingNowPlayingPreview";
 import { QueueList } from "@/features/queue/QueueList";
 import {
   AddTrackDialog,
@@ -80,7 +82,7 @@ export function SpaceRoom({
   }
 
   return (
-    <div className="vybe-stage vybe-washi flex min-h-full flex-1 flex-col">
+    <div className="vybe-stage vybe-washi flex h-dvh max-h-dvh flex-1 flex-col overflow-hidden">
       <SpaceHeader
         spaceName={spaceName}
         members={members}
@@ -103,40 +105,76 @@ export function SpaceRoom({
         }
       />
 
-      <main className="flex-1 py-6 sm:py-8">
-        <Container>
+      <main className="scrollbar-hide flex min-h-0 flex-1 flex-col overflow-hidden py-6 sm:py-8">
+        <Container className="flex min-h-0 flex-1 flex-col overflow-hidden">
           {isOwner ? (
-            /* —— Owner: queue left, full player right —— */
-            <div className="grid items-start gap-6 lg:grid-cols-[minmax(0,1.1fr)_minmax(280px,0.9fr)] lg:gap-8">
-              <div className="min-h-[320px] rounded-xl border border-border/70 bg-card/40 p-4 sm:p-5 lg:min-h-[560px]">
-                <QueueList items={queue} onVote={onVote} />
+            /* —— Owner ——
+               Phone: queue uses full height; host player floats at bottom.
+               Desktop: queue + full player side-by-side. */
+            <>
+              <div className="flex min-h-0 flex-1 flex-col overflow-hidden pb-[5.25rem] lg:grid lg:grid-cols-[minmax(0,1fr)_minmax(260px,380px)] lg:gap-8 lg:pb-0">
+                <div className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-xl border border-border/70 bg-card/40 p-4 sm:p-5">
+                  <QueueList
+                    items={queue}
+                    onVote={onVote}
+                    className="min-h-0 flex-1"
+                  />
+                </div>
+                <div className="hidden lg:block lg:self-start">
+                  <NowPlaying
+                    track={track}
+                    progressSec={progressSec}
+                    isPlaying={isPlaying}
+                    onPlay={onPlay}
+                    onPause={onPause}
+                    onSkip={onSkip}
+                    className="h-auto min-h-0"
+                  />
+                </div>
               </div>
-              <div className="order-first lg:order-none lg:sticky lg:top-6">
-                <NowPlaying
+
+              <FloatingNowPlaying
+                track={track}
+                progressSec={progressSec}
+                isPlaying={isPlaying}
+                onPlay={onPlay}
+                onPause={onPause}
+                onSkip={onSkip}
+                className="lg:hidden"
+              />
+            </>
+          ) : (
+            /* —— Member ——
+               Phone: queue full height; now-playing preview floats at bottom.
+               Desktop: preview on top + queue below. */
+            <>
+              <div className="scrollbar-hide mx-auto flex min-h-0 w-full max-w-5xl flex-1 flex-col overflow-hidden pb-[5.25rem] lg:gap-5 lg:overflow-y-auto lg:pb-2 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:w-0 [&::-webkit-scrollbar]:h-0">
+                <NowPlayingPreview
                   track={track}
                   progressSec={progressSec}
                   isPlaying={isPlaying}
-                  onPlay={onPlay}
-                  onPause={onPause}
-                  onSkip={onSkip}
-                  className="min-h-[420px] lg:min-h-[560px]"
+                  isOwnerOnline={isOwnerOnline}
+                  ownerName={ownerName}
+                  className="hidden shrink-0 lg:block"
                 />
+                <div className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-xl border border-border/70 bg-card/40 p-4 sm:p-5 lg:mb-4 lg:h-[min(72dvh,640px)] lg:flex-none">
+                  <QueueList
+                    items={queue}
+                    onVote={onVote}
+                    className="min-h-0 flex-1"
+                  />
+                </div>
               </div>
-            </div>
-          ) : (
-            /* —— Member: compact preview + queue (no playback controls) —— */
-            <div className="mx-auto flex max-w-3xl flex-col gap-6">
-              <NowPlayingPreview
+
+              <FloatingNowPlayingPreview
                 track={track}
                 progressSec={progressSec}
                 isPlaying={isPlaying}
                 isOwnerOnline={isOwnerOnline}
                 ownerName={ownerName}
+                className="lg:hidden"
               />
-              <div className="min-h-[360px] rounded-xl border border-border/70 bg-card/40 p-4 sm:p-5">
-                <QueueList items={queue} onVote={onVote} />
-              </div>
-            </div>
+            </>
           )}
         </Container>
       </main>

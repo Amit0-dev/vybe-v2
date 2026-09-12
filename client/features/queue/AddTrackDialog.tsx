@@ -97,9 +97,9 @@ export function AddTrackDialog({
       <Dialog open={open} onOpenChange={handleOpenChange}>
         <DialogContent
           className={cn(
-            "gap-0 p-0 sm:max-w-md",
+            "gap-0 overflow-hidden p-0 sm:max-w-md",
             /* Wider panel for library browsing */
-            isCustom && "sm:max-w-2xl",
+            isCustom && "sm:max-w-3xl",
           )}
         >
           {step === "choose" && (
@@ -176,7 +176,7 @@ export function AddTrackDialog({
                 />
               </div>
 
-              <DialogFooter className="mt-6 border-0 bg-transparent p-0 sm:justify-between">
+              <DialogFooter className="mx-0 mb-0 mt-6 border-0 bg-transparent p-0 sm:justify-between">
                 <Button
                   type="button"
                   variant="ghost"
@@ -192,8 +192,8 @@ export function AddTrackDialog({
           )}
 
           {step === "custom" && (
-            <div className="flex flex-col">
-              <div className="border-b border-border/60 px-4 pt-4 pb-3 sm:px-5 sm:pt-5">
+            <div className="flex max-h-[min(90dvh,780px)] min-h-[min(70dvh,560px)] flex-col overflow-hidden">
+              <div className="shrink-0 border-b border-border/60 px-4 pt-4 pb-3 sm:px-5 sm:pt-5">
                 <DialogHeader>
                   <DialogTitle>Your library</DialogTitle>
                   <DialogDescription>
@@ -202,7 +202,7 @@ export function AddTrackDialog({
                 </DialogHeader>
               </div>
 
-              <div className="px-4 py-4 sm:px-5">
+              <div className="min-h-0 flex-1 overflow-y-auto px-4 py-5 scrollbar-hide sm:px-6">
                 <CustomTrackPicker
                   tracks={libraryTracks}
                   selectedId={selected?.id ?? null}
@@ -211,7 +211,8 @@ export function AddTrackDialog({
                 />
               </div>
 
-              <DialogFooter className="rounded-b-xl border-t border-border/60 bg-muted/30 px-4 py-3 sm:px-5 sm:justify-between">
+              {/* mx-0 mb-0 cancels DialogFooter defaults meant for padded dialogs */}
+              <DialogFooter className="mx-0 mb-0 shrink-0 rounded-b-xl border-t border-border/60 bg-muted/30 px-4 py-3 sm:px-5 sm:justify-between">
                 <Button
                   type="button"
                   variant="ghost"

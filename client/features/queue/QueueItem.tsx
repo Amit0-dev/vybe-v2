@@ -3,7 +3,7 @@
 import { Music2 } from "lucide-react";
 import type { QueueItem as QueueItemType } from "@/lib/types";
 import { VoteControls } from "@/features/voting/VoteControls";
-import { cn } from "@/lib/utils";
+import { formatDuration, cn } from "@/lib/utils";
 
 interface QueueItemProps {
   item: QueueItemType;
@@ -18,50 +18,81 @@ export function QueueItem({
   onVote,
   className,
 }: QueueItemProps) {
-  const { track, score, userVote, id } = item;
+  const { track, score, userVote, id, status } = item;
+  const isPlaying = status === "PLAYING";
 
   return (
-    <li
-      className={cn(
-        "group flex items-center gap-3 border-b border-border/50 px-1 py-3 last:border-b-0 transition-colors hover:bg-card/60",
-        className,
-      )}
-    >
-      {typeof index === "number" && (
-        <span className="w-6 shrink-0 text-center text-xs tabular-nums text-muted-foreground/70">
-          {String(index + 1).padStart(2, "0")}
-        </span>
-      )}
+    <li className={cn("list-none", className)}>
+      <article
+        className={cn(
+          "group flex items-center gap-3 rounded-xl border bg-card p-3 transition-all sm:gap-4 sm:p-3.5",
+          "border-border/70 shadow-[0_8px_20px_-16px_color-mix(in_srgb,#1c6056_40%,transparent)]",
+          "hover:border-primary/25 hover:shadow-[0_12px_24px_-16px_color-mix(in_srgb,#1c6056_45%,transparent)]",
+          isPlaying && "border-primary/35 bg-vybe-muted/60",
+        )}
+      >
+        {/* Rank */}
+        {typeof index === "number" && (
+          <span
+            className={cn(
+              "hidden w-6 shrink-0 text-center text-xs font-medium tabular-nums sm:block",
+              isPlaying ? "text-primary" : "text-muted-foreground/70",
+            )}
+          >
+            {String(index + 1).padStart(2, "0")}
+          </span>
+        )}
 
-      <div className="relative size-11 shrink-0 overflow-hidden rounded-md bg-muted">
-        {track.artworkUrl ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img
-            src={track.artworkUrl}
-            alt=""
-            className="size-full object-cover"
-          />
-        ) : (
-          <div className="flex size-full items-center justify-center">
-            <Music2 className="size-4 text-muted-foreground/50" aria-hidden />
+        {/* Artwork */}
+        <div className="relative size-12 shrink-0 overflow-hidden rounded-lg bg-muted sm:size-14">
+          {track.artworkUrl ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img
+              src={track.artworkUrl}
+              alt=""
+              className="size-full object-cover"
+            />
+          ) : (
+            <div className="flex size-full items-center justify-center bg-gradient-to-br from-primary/15 to-muted">
+              <Music2
+                className="size-5 text-primary/60"
+                aria-hidden
+              />
+            </div>
+          )}
+          {isPlaying && (
+            <span className="absolute inset-x-0 bottom-0 bg-primary/90 py-0.5 text-center text-[9px] font-medium tracking-wider text-primary-foreground uppercase">
+              Live
+            </span>
+          )}
+        </div>
+
+        {/* Meta */}
+        <div className="min-w-0 flex-1">
+          <p className="truncate text-sm font-semibold tracking-tight sm:text-[15px]">
+            {track.title}
+          </p>
+          <div className="mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-xs text-muted-foreground">
+            {track.artist && (
+              <span className="truncate">{track.artist}</span>
+            )}
+            {typeof track.durationSec === "number" && (
+              <span className="tabular-nums opacity-80">
+                {formatDuration(track.durationSec)}
+              </span>
+            )}
           </div>
-        )}
-      </div>
+        </div>
 
-      <div className="min-w-0 flex-1">
-        <p className="truncate text-sm font-medium tracking-tight">
-          {track.title}
-        </p>
-        {track.artist && (
-          <p className="truncate text-xs text-muted-foreground">{track.artist}</p>
-        )}
-      </div>
-
-      <VoteControls
-        score={score}
-        userVote={userVote}
-        onVote={(value) => onVote?.(id, value)}
-      />
+        {/* Votes */}
+        <VoteControls
+          score={score}
+          userVote={userVote}
+          onVote={(value) => onVote?.(id, value)}
+          orientation="vertical"
+          className="pl-1"
+        />
+      </article>
     </li>
   );
 }

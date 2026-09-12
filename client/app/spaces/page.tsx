@@ -2,6 +2,35 @@ import Link from "next/link";
 import { SiteHeader } from "@/components/layout/SiteHeader";
 import { Container } from "@/components/layout/Container";
 import { SpacesGrid } from "@/features/spaces/SpacesGrid";
+import type { SpaceSummary } from "@/lib/types";
+
+/** UI placeholders — replace with API data when wiring the backend */
+const DEMO_SPACES: SpaceSummary[] = [
+  {
+    id: "friday-night",
+    name: "Friday Night",
+    status: "ACTIVE",
+    memberCount: 8,
+    isOwner: true,
+    nowPlaying: { title: "Midnight City", artist: "M83" },
+  },
+  {
+    id: "study-session",
+    name: "Study Session",
+    status: "ACTIVE",
+    memberCount: 4,
+    isOwner: false,
+    nowPlaying: { title: "Weightless", artist: "Marconi Union" },
+  },
+  {
+    id: "road-trip",
+    name: "Road Trip",
+    status: "CLOSED",
+    memberCount: 3,
+    isOwner: true,
+    nowPlaying: null,
+  },
+];
 
 export default function SpacesPage() {
   return (
@@ -30,7 +59,7 @@ export default function SpacesPage() {
           </div>
 
           {/* Wire spaces + onCreateSpace when connecting the backend */}
-          <SpacesGrid spaces={[]} />
+          <SpacesGrid spaces={DEMO_SPACES} />
         </Container>
       </main>
     </div>
