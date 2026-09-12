@@ -6,9 +6,14 @@ import {
     createCustomTrackUpload,
     createTrack,
     deleteCustomTrackUpload,
+    findCustomTracks,
     findYouTubeTrack,
 } from "./track.repository.js";
-import { type CreateCustomTrackUploadInput, CreateYoutubeTrackInput } from "./track.schema.js";
+import {
+    type CreateCustomTrackUploadInput,
+    CreateYoutubeTrackInput,
+    GetCustomTracksInput,
+} from "./track.schema.js";
 import { extractYoutubeVideoId, generateCustomTrackStorageKey } from "./track.utils.js";
 
 export async function createYouTubeTrack(input: CreateYoutubeTrackInput) {
@@ -72,4 +77,28 @@ export async function createCustomTrackUploadUrl(input: CreateCustomTrackUploadI
         await deleteCustomTrackUpload(upload.id);
         throw error;
     }
+}
+
+export async function getCustomTracks({ search, page, limit }: GetCustomTracksInput) {
+    const tracks = await findCustomTracks({
+        search,
+        page,
+        limit,
+    });
+
+    const hasNextPage = tracks.length > limit;
+
+    if (hasNextPage) {
+        tracks.pop();
+    }
+
+    return {
+        tracks,
+        pagination: {
+            page,
+            limit,
+            hasNextPage,
+            hasPreviousPage: page > 1,
+        },
+    };
 }

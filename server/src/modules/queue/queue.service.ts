@@ -5,6 +5,7 @@ import { ConflictError, NotFoundError } from "../../lib/errors.js";
 import { RealtimeEvent } from "../../realtime/realtime.events.js";
 import { broadcastToSpace } from "../../realtime/realtime.manager.js";
 import { findTrackById } from "../track/track.repository.js";
+import { createYouTubeTrack } from "../track/track.service.js";
 import { voteOnQueueItem } from "../vote/vote.service.js";
 import { addQueueItem, getQueueRanking, removeQueueItem } from "./queue.ranking.js";
 import {
@@ -137,10 +138,7 @@ function canTransition(currentStatus: QueueItemStatus, nextStatus: QueueItemStat
     return false;
 }
 
-export async function transitionQueueItem(
-    queueItemId: string,
-    nextStatus: QueueItemStatus,
-) {
+export async function transitionQueueItem(queueItemId: string, nextStatus: QueueItemStatus) {
     const queueItem = await findQueueItemById(queueItemId);
 
     if (!queueItem) {
@@ -202,10 +200,7 @@ export async function skipQueueItem(spaceId: string, queueItemId: string) {
         throw new NotFoundError("Queue item not found", "QUEUE_ITEM_NOT_FOUND");
     }
 
-    const updatedQueueItem = await transitionQueueItem(
-        queueItem.id,
-        QueueItemStatus.SKIPPED,
-    );
+    const updatedQueueItem = await transitionQueueItem(queueItem.id, QueueItemStatus.SKIPPED);
 
     broadcastToSpace(spaceId, {
         type: RealtimeEvent.QUEUE_ITEM_SKIPPED,
@@ -214,4 +209,10 @@ export async function skipQueueItem(spaceId: string, queueItemId: string) {
     });
 
     return updatedQueueItem;
+}
+
+export async function addYouTubeTrackToQueue(spaceId: string, url: string, userId: string) {
+    const track = await createYouTubeTrack({ url });
+
+    return addTrackToQueue(spaceId, track.id, userId);
 }

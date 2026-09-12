@@ -61,3 +61,32 @@ export async function findTrackById(id: string) {
         where: { id },
     });
 }
+
+type FindCustomTrackOptions = {
+    search?: string | undefined;
+    page: number;
+    limit: number;
+};
+
+export async function findCustomTracks({ search, page, limit }: FindCustomTrackOptions) {
+    const skip = (page - 1) * limit;
+
+    return prisma.track.findMany({
+        where: {
+            source: "CUSTOM",
+            ...(search
+                ? {
+                      title: {
+                          contains: search,
+                          mode: "insensitive",
+                      },
+                  }
+                : {}),
+        },
+        orderBy: {
+            createdAt: "desc",
+        },
+        skip,
+        take: limit + 1,
+    });
+}

@@ -5,6 +5,7 @@ import { requireAuth } from "../../middleware/auth.middleware.js";
 import {
     createCustomTrackUploadUrlController,
     createYouTubeTrackController,
+    getCustomTracksController,
 } from "./track.controller.js";
 import { requireAdmin } from "../../middleware/admin.middleware.js";
 import { asyncHandler } from "../../lib/async-handler.js";
@@ -19,3 +20,5 @@ trackRouter.post(
     requireAdmin,
     asyncHandler(createCustomTrackUploadUrlController),
 );
+
+trackRouter.get("/custom", requireAuth, asyncHandler(getCustomTracksController));
