@@ -194,6 +194,18 @@ export async function findQueueItemInSpace(queueItemId: string, spaceId: string)
     });
 }
 
+export async function findQueueItemForAudio(queueItemId: string, spaceId: string) {
+    return prisma.queueItem.findFirst({
+        where: {
+            id: queueItemId,
+            spaceId,
+        },
+        include: {
+            track: true,
+        },
+    });
+}
+
 export async function findQueueItemForVote(queueItemId: string) {
     return prisma.queueItem.findUnique({
         where: { id: queueItemId },

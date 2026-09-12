@@ -1,6 +1,6 @@
 import type { RequestHandler } from "express";
 import { parseSpaceIdParams } from "../../middleware/space.middleware.js";
-import { completePlayback, getPlaybackState, startPlayback } from "./playback.service.js";
+import { completePlayback, getPlaybackState, getPlaybackUrl, startPlayback } from "./playback.service.js";
 import { parseQueueItemIdParams } from "../queue/queue.controller.js";
 
 export const startPlaybackController: RequestHandler = async (req, res) => {
@@ -32,4 +32,13 @@ export const getPlaybackStateController: RequestHandler = async (req, res) => {
     res.status(200).json({
         queueItem,
     });
+};
+
+export const getPlaybackUrlController: RequestHandler = async (req, res) => {
+    const { spaceId } = parseSpaceIdParams(req.params);
+    const { queueItemId } = parseQueueItemIdParams(req.params);
+
+    const result = await getPlaybackUrl(spaceId, queueItemId);
+
+    return res.status(200).json(result);
 };

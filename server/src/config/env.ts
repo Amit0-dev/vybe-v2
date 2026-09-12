@@ -29,10 +29,14 @@ const envSchema = z.object({
 
     SQS_CUSTOM_TRACK_QUEUE_URL: z.url(),
 
-    MAX_CUSTOM_TRACK_SIZE_MB: z.coerce
-    .number()
-    .positive()
-    .default(50),
+    MAX_CUSTOM_TRACK_SIZE_MB: z.coerce.number().positive().default(50),
+
+    CLOUDFRONT_DOMAIN: z.string().min(1),
+    CLOUDFRONT_KEY_PAIR_ID: z.string().min(1),
+    CLOUDFRONT_PRIVATE_KEY: z
+        .string()
+        .min(1)
+        .transform((value) => value.replace(/\\n/g, "\n")),
 });
 
 export const env = envSchema.parse(process.env);

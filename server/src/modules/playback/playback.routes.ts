@@ -3,7 +3,7 @@ import { requireAuth } from "../../middleware/auth.middleware.js";
 import { requireSpaceMember } from "../../middleware/space.middleware.js";
 import { requireSpaceOwner } from "../../middleware/space-owner.middleware.js";
 import { asyncHandler } from "../../lib/async-handler.js";
-import { completePlaybackController, getPlaybackStateController, startPlaybackController } from "./playback.controller.js";
+import { completePlaybackController, getPlaybackStateController, getPlaybackUrlController, startPlaybackController } from "./playback.controller.js";
 
 export const playbackRouter = Router();
 
@@ -28,4 +28,12 @@ playbackRouter.get(
     requireAuth,
     requireSpaceMember,
     asyncHandler(getPlaybackStateController),
+);
+
+playbackRouter.get(
+    "/:spaceId/playback/:queueItemId/audio",
+    requireAuth,
+    requireSpaceMember,
+    requireSpaceOwner,
+    asyncHandler(getPlaybackUrlController),
 );

@@ -1,5 +1,6 @@
 import { Prisma, QueueItemStatus, SpaceStatus } from "../../generated/prisma/client.js";
-import { NotFoundError } from "../../lib/errors.js";
+import { generatePlaybackUrl } from "../../integrations/storage/cloudfront.client.js";
+import { BadRequestError, NotFoundError } from "../../lib/errors.js";
 import { RealtimeEvent } from "../../realtime/realtime.events.js";
 import { broadcastToSpace } from "../../realtime/realtime.manager.js";
 import { getPlaybackCandidates } from "../queue/queue.ranking.js";
@@ -7,6 +8,7 @@ import {
     claimQueueItem,
     findPlayingQueueItem,
     findQueueItemById,
+    findQueueItemForAudio,
     findQueueItemForPlayback,
     findQueueItemInSpace,
 } from "../queue/queue.repository.js";
@@ -161,4 +163,33 @@ export async function shutdownPlayback(spaceId: string) {
     const skippedQueueItem = await skipQueueItem(spaceId, playingQueueItem.id);
 
     return skippedQueueItem;
+}
+
+export async function getPlaybackUrl(spaceId: string, queueItemId: string) {
+    const queueItem = await findQueueItemForAudio(queueItemId, spaceId);
+
+    if (!queueItem) {
+        throw new NotFoundError("Queue item not found", "QUEUE_ITEM_NOT_FOUND");
+    }
+
+    if (queueItem.status !== QueueItemStatus.PLAYING) {
+        throw new BadRequestError("Queue item is not currently playing", "QUEUE_ITEM_NOT_PLAYING");
+    }
+
+    if (queueItem.track.source !== "CUSTOM") {
+        throw new BadRequestError(
+            "Playback URL is only available for custom tracks",
+            "TRACK_NOT_CUSTOM",
+        );
+    }
+
+    if (!queueItem.track.storageKey) {
+        throw new Error("Custom track has no storage key");
+    }
+
+    const url = generatePlaybackUrl(queueItem.track.storageKey);
+
+    return {
+        url,
+    };
 }
