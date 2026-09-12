@@ -1,5 +1,6 @@
 "use client";
 
+import { motion, useReducedMotion } from "framer-motion";
 import { Music2 } from "lucide-react";
 import type { QueueItem as QueueItemType } from "@/lib/types";
 import { VoteControls } from "@/features/voting/VoteControls";
@@ -20,18 +21,26 @@ export function QueueItem({
 }: QueueItemProps) {
   const { track, score, userVote, id, status } = item;
   const isPlaying = status === "PLAYING";
+  const reduceMotion = useReducedMotion();
 
   return (
-    <li className={cn("list-none", className)}>
+    <motion.li
+      layout={!reduceMotion}
+      className={cn("list-none", className)}
+      transition={
+        reduceMotion
+          ? { duration: 0 }
+          : { type: "spring", stiffness: 420, damping: 36 }
+      }
+    >
       <article
         className={cn(
-          "group flex items-center gap-3 rounded-xl border bg-card p-3 transition-all sm:gap-4 sm:p-3.5",
+          "group flex items-center gap-3 rounded-xl border bg-card p-3 transition-colors sm:gap-4 sm:p-3.5",
           "border-border/70 shadow-[0_8px_20px_-16px_color-mix(in_srgb,#1c6056_40%,transparent)]",
           "hover:border-primary/25 hover:shadow-[0_12px_24px_-16px_color-mix(in_srgb,#1c6056_45%,transparent)]",
           isPlaying && "border-primary/35 bg-vybe-muted/60",
         )}
       >
-        {/* Rank */}
         {typeof index === "number" && (
           <span
             className={cn(
@@ -43,7 +52,6 @@ export function QueueItem({
           </span>
         )}
 
-        {/* Artwork */}
         <div className="relative size-12 shrink-0 overflow-hidden rounded-lg bg-muted sm:size-14">
           {track.artworkUrl ? (
             // eslint-disable-next-line @next/next/no-img-element
@@ -54,10 +62,7 @@ export function QueueItem({
             />
           ) : (
             <div className="flex size-full items-center justify-center bg-gradient-to-br from-primary/15 to-muted">
-              <Music2
-                className="size-5 text-primary/60"
-                aria-hidden
-              />
+              <Music2 className="size-5 text-primary/60" aria-hidden />
             </div>
           )}
           {isPlaying && (
@@ -67,15 +72,12 @@ export function QueueItem({
           )}
         </div>
 
-        {/* Meta */}
         <div className="min-w-0 flex-1">
           <p className="truncate text-sm font-semibold tracking-tight sm:text-[15px]">
             {track.title}
           </p>
           <div className="mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-xs text-muted-foreground">
-            {track.artist && (
-              <span className="truncate">{track.artist}</span>
-            )}
+            {track.artist && <span className="truncate">{track.artist}</span>}
             {typeof track.durationSec === "number" && (
               <span className="tabular-nums opacity-80">
                 {formatDuration(track.durationSec)}
@@ -84,7 +86,6 @@ export function QueueItem({
           </div>
         </div>
 
-        {/* Votes */}
         <VoteControls
           score={score}
           userVote={userVote}
@@ -93,6 +94,6 @@ export function QueueItem({
           className="pl-1"
         />
       </article>
-    </li>
+    </motion.li>
   );
 }

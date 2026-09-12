@@ -148,7 +148,7 @@ export function SpaceRoom({
                Phone: queue full height; now-playing preview floats at bottom.
                Desktop: preview on top + queue below. */
             <>
-              <div className="scrollbar-hide mx-auto flex min-h-0 w-full max-w-5xl flex-1 flex-col overflow-hidden pb-[5.25rem] lg:gap-5 lg:overflow-y-auto lg:pb-2 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:w-0 [&::-webkit-scrollbar]:h-0">
+              <div className="mx-auto flex min-h-0 w-full max-w-5xl flex-1 flex-col overflow-hidden pb-[5.25rem] lg:gap-5 lg:pb-0">
                 <NowPlayingPreview
                   track={track}
                   progressSec={progressSec}
@@ -157,7 +157,7 @@ export function SpaceRoom({
                   ownerName={ownerName}
                   className="hidden shrink-0 lg:block"
                 />
-                <div className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-xl border border-border/70 bg-card/40 p-4 sm:p-5 lg:mb-4 lg:h-[min(72dvh,640px)] lg:flex-none">
+                <div className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-xl border border-border/70 bg-card/40 p-4 sm:p-5">
                   <QueueList
                     items={queue}
                     onVote={onVote}

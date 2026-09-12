@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { LayoutGroup } from "framer-motion";
 import { ArrowUp } from "lucide-react";
 import type { QueueItem as QueueItemType } from "@/lib/types";
 import { QueueItem } from "./QueueItem";
@@ -12,9 +13,16 @@ interface QueueListProps {
   className?: string;
 }
 
+function rankQueue(items: QueueItemType[]) {
+  return [...items].sort(
+    (a, b) => b.score - a.score || a.id.localeCompare(b.id),
+  );
+}
+
 export function QueueList({ items = [], onVote, className }: QueueListProps) {
   const scrollRef = useRef<HTMLDivElement>(null);
   const [showTop, setShowTop] = useState(false);
+  const ranked = useMemo(() => rankQueue(items), [items]);
 
   useEffect(() => {
     const el = scrollRef.current;
@@ -27,7 +35,7 @@ export function QueueList({ items = [], onVote, className }: QueueListProps) {
     onScroll();
     el.addEventListener("scroll", onScroll, { passive: true });
     return () => el.removeEventListener("scroll", onScroll);
-  }, [items.length]);
+  }, [ranked.length]);
 
   function scrollToTop() {
     scrollRef.current?.scrollTo({ top: 0, behavior: "smooth" });
@@ -50,11 +58,11 @@ export function QueueList({ items = [], onVote, className }: QueueListProps) {
           </p>
         </div>
         <span className="rounded-full bg-muted px-2.5 py-0.5 text-xs font-medium tabular-nums text-muted-foreground">
-          {items.length} {items.length === 1 ? "track" : "tracks"}
+          {ranked.length} {ranked.length === 1 ? "track" : "tracks"}
         </span>
       </div>
 
-      {items.length === 0 ? (
+      {ranked.length === 0 ? (
         <div className="flex min-h-0 flex-1 flex-col items-center justify-center rounded-xl border border-dashed border-border/80 px-6 py-16 text-center">
           <p className="font-heading text-sm font-medium">Empty queue</p>
           <p className="mt-2 max-w-xs text-sm leading-relaxed text-muted-foreground">
@@ -63,26 +71,24 @@ export function QueueList({ items = [], onVote, className }: QueueListProps) {
         </div>
       ) : (
         <>
-          {/*
-            h-0 + flex-1 is the reliable flex scroll pattern:
-            forces a bounded height so overflow-y can activate.
-          */}
           <div
             ref={scrollRef}
             data-queue-scroll
             className="scrollbar-hide h-0 min-h-0 flex-1 overflow-x-hidden overflow-y-auto overscroll-y-contain [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:w-0 [&::-webkit-scrollbar]:h-0"
             style={{ WebkitOverflowScrolling: "touch" }}
           >
-            <ul className="flex flex-col gap-2.5 pb-12" aria-label="Queue">
-              {items.map((item, index) => (
-                <QueueItem
-                  key={item.id}
-                  item={item}
-                  index={index}
-                  onVote={onVote}
-                />
-              ))}
-            </ul>
+            <LayoutGroup>
+              <ul className="flex flex-col gap-2.5 pb-12" aria-label="Queue">
+                {ranked.map((item, index) => (
+                  <QueueItem
+                    key={item.id}
+                    item={item}
+                    index={index}
+                    onVote={onVote}
+                  />
+                ))}
+              </ul>
+            </LayoutGroup>
           </div>
 
           <button
@@ -90,7 +96,7 @@ export function QueueList({ items = [], onVote, className }: QueueListProps) {
             onClick={scrollToTop}
             aria-label="Scroll queue to top"
             className={cn(
-              "absolute right-1/2 translate-x-1/2 bottom-8 z-10 flex size-9 items-center justify-center rounded-full border border-border/80 bg-card/95 text-foreground shadow-md backdrop-blur-sm transition-all",
+              "absolute right-1/2 bottom-8 z-10 flex size-9 translate-x-1/2 items-center justify-center rounded-full border border-border/80 bg-card/95 text-foreground shadow-md backdrop-blur-sm transition-all",
               "hover:border-primary/40 hover:bg-vybe-muted hover:text-primary",
               "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
               showTop
