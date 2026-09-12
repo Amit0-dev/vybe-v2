@@ -17,8 +17,11 @@ export interface RealtimeSocket extends WebSocket {
 }
 
 let wss: WebSocketServer;
+let isRealtimeShuttingDown = false;
 
 export function initializeRealtime(server: Server) {
+    isRealtimeShuttingDown = false;
+    
     wss = new WebSocketServer({
         server,
     });
@@ -65,8 +68,6 @@ export function initializeRealtime(server: Server) {
             // add to Space connections
             addConnection(spaceId, realtimeSocket);
 
-            logger.info({ userId: user.id, spaceId }, "WebSocket client connected");
-
             try {
                 await handleUserConnected(spaceId, user.id);
             } catch (error) {
@@ -80,6 +81,8 @@ export function initializeRealtime(server: Server) {
                 );
             }
 
+            logger.info({ userId: user.id, spaceId }, "WebSocket client connected");
+
             socket.on("close", async () => {
                 removeConnection(spaceId, realtimeSocket);
 
@@ -89,6 +92,10 @@ export function initializeRealtime(server: Server) {
                     { userId: user.id, spaceId, stillConnected },
                     "WebSocket client disconnected",
                 );
+
+                if(isRealtimeShuttingDown) {
+                    return;
+                }
 
                 if (!stillConnected) {
                     try {
@@ -117,4 +124,27 @@ export function initializeRealtime(server: Server) {
     });
 
     logger.info("WebSocket server initialized");
+}
+
+export async function closeRealtime() {
+    isRealtimeShuttingDown = true;
+
+    if (!wss) {
+        return;
+    }
+
+    for (const socket of wss.clients) {
+        socket.close(1001, "Server shutting down");
+    }
+
+    await new Promise<void>((resolve, reject) => {
+        wss.close((err) => {
+            if (err) {
+                reject(err);
+                return;
+            }
+
+            resolve();
+        });
+    });
 }

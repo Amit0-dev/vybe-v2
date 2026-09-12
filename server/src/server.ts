@@ -3,7 +3,7 @@ import { env } from "./config/env.js";
 import { logger } from "./infra/logger.js";
 import { connectInfra, disconnectInfra } from "./infra/index.js";
 import type { Server } from "node:http";
-import { initializeRealtime } from "./realtime/realtime.server.js";
+import { closeRealtime, initializeRealtime } from "./realtime/realtime.server.js";
 
 const app = createApp();
 
@@ -25,18 +25,29 @@ try {
 async function shutdown(signal: string) {
     logger.info(`${signal} received. Shutting down...`);
 
-    if (server) {
-        server.close(async () => {
-            try {
-                await disconnectInfra();
+    try {
+        await closeRealtime();
 
-                logger.info("Application shutdown complete");
-                process.exit(0);
-            } catch (error) {
-                logger.error(error, "Error during shutdown");
-                process.exit(1);
-            }
-        });
+        if (server) {
+            await new Promise<void>((resolve, reject) => {
+                server.close((err) => {
+                    if (err) {
+                        reject(err);
+                        return;
+                    }
+
+                    resolve();
+                });
+            });
+        }
+
+        await disconnectInfra();
+
+        logger.info("Application shutdown complete");
+        process.exit(0);
+    } catch (error) {
+        logger.error({ err: error }, "Error during shutdown");
+        process.exit(1);
     }
 }
 

@@ -11,6 +11,12 @@ import {
 const RECONCILIATION_INTERVAL_MS = 60_000;
 const LOCK_TTL_SECONDS = 30;
 
+let shouldStop = false;
+
+export function stopQueueReconciliationWorker() {
+    shouldStop = true;
+}
+
 export async function reconcileSpaces() {
     const activeSpaces = await findSpacesWithActiveQueues();
 
@@ -31,8 +37,7 @@ export async function reconcileSpaces() {
         try {
             await reconcileSpaceQueue(spaceId);
             await clearSpaceReconciliation(spaceId);
-        } 
-        catch (error) {
+        } catch (error) {
             logger.error(
                 {
                     err: error,
@@ -40,15 +45,14 @@ export async function reconcileSpaces() {
                 },
                 "Space reconciliation failed",
             );
-        }
-        finally {
+        } finally {
             await releaseLock(lock);
         }
     }
 }
 
 export async function startQueueReconciliationWorker() {
-    while (true) {
+    while (!shouldStop) {
         try {
             await reconcileSpaces();
             await handleOwnerRecovery();
@@ -59,6 +63,10 @@ export async function startQueueReconciliationWorker() {
                 },
                 "Queue reconciliation cycle failed",
             );
+        }
+
+        if (shouldStop) {
+            break;
         }
 
         await new Promise((resolve) => {
