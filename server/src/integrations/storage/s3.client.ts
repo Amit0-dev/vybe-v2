@@ -22,6 +22,7 @@ export async function generateUploadUrl(storagekey: string) {
         ContentType: "audio/mpeg",
     });
 
+    // Is this url is only for single use?
     return getSignedUrl(s3Client, command, {
         expiresIn: 60 * 5,
     });
