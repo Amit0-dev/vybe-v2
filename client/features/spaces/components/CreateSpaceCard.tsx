@@ -14,7 +14,7 @@ export function CreateSpaceCard({ onClick, className }: CreateSpaceCardProps) {
       type="button"
       onClick={onClick}
       className={cn(
-        "flex min-h-[168px] flex-col items-center justify-center gap-3 rounded-2xl border border-dashed border-border/80 bg-transparent p-5 text-muted-foreground transition-all duration-200",
+        "flex min-h-42 flex-col items-center justify-center gap-3 rounded-2xl border border-dashed border-border/80 bg-transparent p-5 text-muted-foreground transition-all duration-200",
         "hover:border-primary/45 hover:bg-vybe-muted hover:text-foreground",
         "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
         className,

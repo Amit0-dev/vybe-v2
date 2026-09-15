@@ -72,7 +72,7 @@ export function SpaceCard({
       href={`/space/${id}`}
       onClick={onClick}
       className={cn(
-        "group relative flex min-h-[176px] flex-col justify-between overflow-hidden rounded-2xl border p-5 transition-all duration-200",
+        "group relative flex min-h-44 flex-col justify-between overflow-hidden rounded-2xl border p-5 transition-all duration-200",
         styles.card,
         "hover:-translate-y-0.5 hover:shadow-[0_16px_32px_-24px_color-mix(in_srgb,var(--primary)_55%,transparent)]",
         "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
@@ -82,7 +82,7 @@ export function SpaceCard({
       {/* Soft top wash */}
       <div
         className={cn(
-          "pointer-events-none absolute inset-x-0 top-0 h-24 bg-gradient-to-b to-transparent",
+          "pointer-events-none absolute inset-x-0 top-0 h-24 bg-linear-to-b to-transparent",
           styles.wash,
         )}
         aria-hidden
