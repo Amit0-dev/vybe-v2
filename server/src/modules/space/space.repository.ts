@@ -126,3 +126,21 @@ export async function deactivateSpace(spaceId: string) {
         },
     });
 }
+
+export async function findSpacesByUserId(userId: string) {
+    return prisma.spaceMember.findMany({
+        where: { userId },
+        select: {
+            role: true,
+            space: {
+                select: {
+                    id: true,
+                    name: true,
+                    joinCode: true,
+                    status: true,
+                    createdAt: true,
+                },
+            },
+        },
+    });
+}

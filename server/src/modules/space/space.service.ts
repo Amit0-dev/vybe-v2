@@ -9,7 +9,8 @@ import {
     findSpaceById,
     findSpaceByJoinCode,
     findSpaceMembers,
-    closeSpace as closeSpaceRecord
+    closeSpace as closeSpaceRecord,
+    findSpacesByUserId,
 } from "./space.repository.js";
 import { Prisma } from "../../generated/prisma/client.js";
 import {
@@ -101,4 +102,8 @@ export async function leaveSpace(spaceId: string, userId: string, role: "OWNER" 
 
 export async function closeSpace(spaceId: string) {
     return closeSpaceRecord(spaceId);
+}
+
+export async function getSpaces(userId: string) {
+    return findSpacesByUserId(userId);
 }

@@ -5,6 +5,7 @@ import {
     createSpace,
     getSpace,
     getSpaceMembers,
+    getSpaces,
     joinSpace,
     leaveSpace,
 } from "./space.service.js";
@@ -76,5 +77,22 @@ export const closeSpaceController: RequestHandler = async (req, res) => {
 
     return res.status(200).json({
         space,
+    });
+};
+
+export const getSpacesController: RequestHandler = async (_req, res) => {
+    const userId = res.locals.user.id;
+
+    const memberships = await getSpaces(userId);
+
+    return res.status(200).json({
+        spaces: memberships.map((membership) => ({
+            id: membership.space.id,
+            name: membership.space.name,
+            joinCode: membership.space.joinCode,
+            status: membership.space.status,
+            role: membership.role,
+            createdAt: membership.space.createdAt,
+        })),
     });
 };

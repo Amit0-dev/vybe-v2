@@ -5,6 +5,7 @@ import {
     createSpaceController,
     getSpaceController,
     getSpaceMembersController,
+    getSpacesController,
     joinSpaceController,
     leaveSpaceController,
 } from "./space.controller.js";
@@ -15,6 +16,8 @@ import { requireSpaceOwner } from "../../middleware/space-owner.middleware.js";
 export const spaceRouter = Router();
 
 spaceRouter.post("/", requireAuth, asyncHandler(createSpaceController));
+
+spaceRouter.get("/", requireAuth, asyncHandler(getSpacesController));
 
 spaceRouter.post("/join", requireAuth, asyncHandler(joinSpaceController));
 
@@ -41,3 +44,8 @@ spaceRouter.post(
     requireSpaceOwner,
     asyncHandler(closeSpaceController),
 );
+
+
+// TODO: add update space route
+// TODO: add delete space route
+// TODO: add remove member route (space owner only)
