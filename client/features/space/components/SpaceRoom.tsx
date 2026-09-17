@@ -1,7 +1,7 @@
 "use client";
 
-import { SpaceHeader } from "@/features/space/SpaceHeader";
-import { OwnerPresence } from "@/features/space/OwnerPresence";
+import { SpaceHeader } from "./SpaceHeader";
+import { OwnerPresence } from "./OwnerPresence";
 import { NowPlaying } from "@/features/playback/NowPlaying";
 import { FloatingNowPlaying } from "@/features/playback/FloatingNowPlaying";
 import { NowPlayingPreview } from "@/features/playback/NowPlayingPreview";
@@ -112,7 +112,7 @@ export function SpaceRoom({
                Phone: queue uses full height; host player floats at bottom.
                Desktop: queue + full player side-by-side. */
             <>
-              <div className="flex min-h-0 flex-1 flex-col overflow-hidden pb-[5.25rem] lg:grid lg:grid-cols-[minmax(0,1fr)_minmax(260px,380px)] lg:gap-8 lg:pb-0">
+              <div className="flex min-h-0 flex-1 flex-col overflow-hidden pb-21 lg:grid lg:grid-cols-[minmax(0,1fr)_minmax(260px,380px)] lg:gap-8 lg:pb-0">
                 <div className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-xl border border-border/70 bg-card/40 p-4 sm:p-5">
                   <QueueList
                     items={queue}
@@ -148,7 +148,7 @@ export function SpaceRoom({
                Phone: queue full height; now-playing preview floats at bottom.
                Desktop: preview on top + queue below. */
             <>
-              <div className="mx-auto flex min-h-0 w-full max-w-5xl flex-1 flex-col overflow-hidden pb-[5.25rem] lg:gap-5 lg:pb-0">
+              <div className="mx-auto flex min-h-0 w-full max-w-5xl flex-1 flex-col overflow-hidden pb-21 lg:gap-5 lg:pb-0">
                 <NowPlayingPreview
                   track={track}
                   progressSec={progressSec}

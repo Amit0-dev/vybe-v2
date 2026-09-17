@@ -1,5 +1,5 @@
 import { apiClient } from "@/lib/api-client";
-import { CreateSpaceInput } from "../schemas/space.schema";
+import { CreateSpaceInput, JoinSpaceInput } from "../schemas/space.schema";
 
 export type SpaceStatus = "ACTIVE" | "CLOSED";
 export type SpaceMemberRole = "OWNER" | "PARTICIPANT";
@@ -27,6 +27,22 @@ export interface CreateSpaceResponse {
 
 export function createSpace(input: CreateSpaceInput) {
     return apiClient<CreateSpaceResponse>("/api/spaces", {
+        method: "POST",
+        body: JSON.stringify(input),
+    });
+}
+
+export interface JoinSpaceResponse {
+    membership: {
+        id: string;
+        spaceId: string;
+        role: SpaceMemberRole;
+        joinedAt: string;
+    };
+}
+
+export function joinSpace(input: JoinSpaceInput) {
+    return apiClient<JoinSpaceResponse>("/api/spaces/join", {
         method: "POST",
         body: JSON.stringify(input),
     });
