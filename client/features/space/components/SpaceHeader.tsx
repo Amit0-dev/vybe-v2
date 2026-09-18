@@ -1,31 +1,23 @@
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Container } from "@/components/layout/Container";
 import { ThemeToggle } from "@/components/theme/ThemeToggle";
-import type { SpaceMember } from "@/lib/types";
 import { cn } from "@/lib/utils";
+import type { SpaceConnectionStatus } from "../realtime/space-ws.types";
 
 interface SpaceHeaderProps {
   spaceName?: string;
-  members?: SpaceMember[];
+  members?: number;
+  connectionStatus?: SpaceConnectionStatus;
   isOwner?: boolean;
   actions?: React.ReactNode;
   className?: string;
 }
 
-function initials(name: string) {
-  return name
-    .split(" ")
-    .map((n) => n[0])
-    .join("")
-    .slice(0, 2)
-    .toUpperCase();
-}
-
 export function SpaceHeader({
   spaceName = "Space",
-  members = [],
+  members = 0,
+  connectionStatus = "connecting",
   isOwner = false,
   actions,
   className,
@@ -64,27 +56,34 @@ export function SpaceHeader({
         </div>
 
         <div className="flex shrink-0 items-center gap-2 sm:gap-3">
-          {members.length > 0 && (
-            <div className="hidden items-center -space-x-2 sm:flex" aria-label="Members">
-              {members.slice(0, 4).map((member) => (
-                <Avatar
-                  key={member.id}
-                  className="size-7 border-2 border-background"
-                >
-                  {member.image && (
-                    <AvatarImage src={member.image} alt={member.name} />
-                  )}
-                  <AvatarFallback className="text-[9px]">
-                    {initials(member.name)}
-                  </AvatarFallback>
-                </Avatar>
-              ))}
-              {members.length > 4 && (
-                <span className="flex size-7 items-center justify-center rounded-full border-2 border-background bg-muted text-[9px] text-muted-foreground">
-                  +{members.length - 4}
-                </span>
+          <span
+            className="flex items-center gap-1.5 text-xs text-muted-foreground"
+            role="status"
+            aria-live="polite"
+          >
+            <span
+              className={cn(
+                "size-1.5 rounded-full",
+                connectionStatus === "connected" && "bg-emerald-500",
+                connectionStatus === "connecting" && "bg-amber-500",
+                connectionStatus === "reconnecting" && "bg-amber-500",
+                connectionStatus === "disconnected" && "bg-muted-foreground",
+                connectionStatus === "error" && "bg-destructive",
               )}
-            </div>
+              aria-hidden="true"
+            />
+            <span className="hidden sm:inline">
+              {connectionStatus === "connected" && "Connected"}
+              {connectionStatus === "connecting" && "Connecting"}
+              {connectionStatus === "reconnecting" && "Reconnecting"}
+              {connectionStatus === "disconnected" && "Disconnected"}
+              {connectionStatus === "error" && "Connection error"}
+            </span>
+          </span>
+          {members > 0 && (
+            <span className="text-xs text-muted-foreground" aria-label="Member count">
+              {members} {members === 1 ? "member" : "members"}
+            </span>
           )}
           <ThemeToggle />
           {actions}

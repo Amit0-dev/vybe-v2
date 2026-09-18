@@ -42,13 +42,8 @@ export function createSpace(input: CreateSpaceInput) {
 
 export interface JoinSpaceResponse {
     membership: {
-        id: string;
         spaceId: string;
-        role: SpaceMemberRole;
-        joinedAt: string;
-        space: {
-            name: string;
-        };
+        spaceName: string;
     };
 }
 

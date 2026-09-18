@@ -10,6 +10,8 @@ import {
     handleUserConnected,
     handleUserDisconnected,
 } from "../modules/playback/playback.service.js";
+import { getSpaceRealtimeSnapshot } from "../modules/space/space-realtime.service.js";
+import { RealtimeEvent } from "./realtime.events.js";
 
 export interface RealtimeSocket extends WebSocket {
     userId: string;
@@ -21,7 +23,7 @@ let isRealtimeShuttingDown = false;
 
 export function initializeRealtime(server: Server) {
     isRealtimeShuttingDown = false;
-    
+
     wss = new WebSocketServer({
         server,
     });
@@ -67,6 +69,17 @@ export function initializeRealtime(server: Server) {
 
             // add to Space connections
             addConnection(spaceId, realtimeSocket);
+            const snapshot = await getSpaceRealtimeSnapshot(spaceId);
+
+            if (socket.readyState === WebSocket.OPEN) {
+                socket.send(
+                    JSON.stringify({
+                        type: RealtimeEvent.SPACE_SNAPSHOT,
+                        spaceId,
+                        payload: snapshot,
+                    }),
+                );
+            }
 
             try {
                 await handleUserConnected(spaceId, user.id);
@@ -93,7 +106,7 @@ export function initializeRealtime(server: Server) {
                     "WebSocket client disconnected",
                 );
 
-                if(isRealtimeShuttingDown) {
+                if (isRealtimeShuttingDown) {
                     return;
                 }
 

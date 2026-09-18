@@ -1,28 +1,21 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { LayoutGroup } from "framer-motion";
 import { ArrowUp } from "lucide-react";
-import type { QueueItem as QueueItemType } from "@/lib/types";
-import { QueueItem } from "./QueueItem";
 import { cn } from "@/lib/utils";
+import type { QueueItem } from "../space/realtime/space-ws.types";
+import { QueueItem as QueueItemComponent } from "./QueueItem";
 
 interface QueueListProps {
-  items?: QueueItemType[];
+  items?: QueueItem[];
   onVote?: (queueItemId: string, value: 1 | -1) => void;
   className?: string;
-}
-
-function rankQueue(items: QueueItemType[]) {
-  return [...items].sort(
-    (a, b) => b.score - a.score || a.id.localeCompare(b.id),
-  );
 }
 
 export function QueueList({ items = [], onVote, className }: QueueListProps) {
   const scrollRef = useRef<HTMLDivElement>(null);
   const [showTop, setShowTop] = useState(false);
-  const ranked = useMemo(() => rankQueue(items), [items]);
 
   useEffect(() => {
     const el = scrollRef.current;
@@ -35,7 +28,7 @@ export function QueueList({ items = [], onVote, className }: QueueListProps) {
     onScroll();
     el.addEventListener("scroll", onScroll, { passive: true });
     return () => el.removeEventListener("scroll", onScroll);
-  }, [ranked.length]);
+  }, [scrollRef.current]);
 
   function scrollToTop() {
     scrollRef.current?.scrollTo({ top: 0, behavior: "smooth" });
@@ -57,12 +50,12 @@ export function QueueList({ items = [], onVote, className }: QueueListProps) {
             Vote to shape what plays next
           </p>
         </div>
-        <span className="rounded-full bg-muted px-2.5 py-0.5 text-xs font-medium tabular-nums text-muted-foreground">
+        {/* <span className="rounded-full bg-muted px-2.5 py-0.5 text-xs font-medium tabular-nums text-muted-foreground">
           {ranked.length} {ranked.length === 1 ? "track" : "tracks"}
-        </span>
+        </span> */}
       </div>
 
-      {ranked.length === 0 ? (
+      {items.length === 0 ? (
         <div className="flex min-h-0 flex-1 flex-col items-center justify-center rounded-xl border border-dashed border-border/80 px-6 py-16 text-center">
           <p className="font-heading text-sm font-medium">Empty queue</p>
           <p className="mt-2 max-w-xs text-sm leading-relaxed text-muted-foreground">
@@ -79,8 +72,8 @@ export function QueueList({ items = [], onVote, className }: QueueListProps) {
           >
             <LayoutGroup>
               <ul className="flex flex-col gap-2.5 pb-12" aria-label="Queue">
-                {ranked.map((item, index) => (
-                  <QueueItem
+                {items.map((item, index) => (
+                  <QueueItemComponent
                     key={item.id}
                     item={item}
                     index={index}

@@ -5,6 +5,7 @@ export const RealtimeEvent = {
     QUEUE_ITEM_ADDED: "QUEUE_ITEM_ADDED",
     QUEUE_ITEM_SKIPPED: "QUEUE_ITEM_SKIPPED",
     QUEUE_ITEM_PLAYING: "QUEUE_ITEM_PLAYING",
+    SPACE_SNAPSHOT: "SPACE_SNAPSHOT",
 } as const;
 
 export type QueueItemVoteUpdatedEvent = {

@@ -2,9 +2,9 @@
 
 import { motion, useReducedMotion } from "framer-motion";
 import { Music2 } from "lucide-react";
-import type { QueueItem as QueueItemType } from "@/lib/types";
 import { VoteControls } from "@/features/voting/VoteControls";
 import { formatDuration, cn } from "@/lib/utils";
+import type { QueueItem as QueueItemType } from "../space/realtime/space-ws.types";
 
 interface QueueItemProps {
   item: QueueItemType;
@@ -19,7 +19,7 @@ export function QueueItem({
   onVote,
   className,
 }: QueueItemProps) {
-  const { track, score, userVote, id, status } = item;
+  const { track, score, id, status } = item;
   const isPlaying = status === "PLAYING";
   const reduceMotion = useReducedMotion();
 
@@ -53,18 +53,9 @@ export function QueueItem({
         )}
 
         <div className="relative size-12 shrink-0 overflow-hidden rounded-lg bg-muted sm:size-14">
-          {track.artworkUrl ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img
-              src={track.artworkUrl}
-              alt=""
-              className="size-full object-cover"
-            />
-          ) : (
-            <div className="flex size-full items-center justify-center bg-gradient-to-br from-primary/15 to-muted">
-              <Music2 className="size-5 text-primary/60" aria-hidden />
-            </div>
-          )}
+          <div className="flex size-full items-center justify-center bg-linear-to-br from-primary/15 to-muted">
+            <Music2 className="size-5 text-primary/60" aria-hidden />
+          </div>
           {isPlaying && (
             <span className="absolute inset-x-0 bottom-0 bg-primary/90 py-0.5 text-center text-[9px] font-medium tracking-wider text-primary-foreground uppercase">
               Live
@@ -88,7 +79,7 @@ export function QueueItem({
 
         <VoteControls
           score={score}
-          userVote={userVote}
+          // userVote={userVote}
           onVote={(value) => onVote?.(id, value)}
           orientation="vertical"
           className="pl-1"

@@ -14,28 +14,26 @@ import {
 import { Container } from "@/components/layout/Container";
 import type {
   LibraryTrack,
-  QueueItem,
   SpaceMember,
   SpaceStatus,
   Track,
 } from "@/lib/types";
+import { PlaybackState, QueueItem, SpaceConnectionStatus } from "../realtime/space-ws.types";
 
 interface SpaceRoomProps {
   spaceName?: string;
-  members?: SpaceMember[];
-  /** Current user is the Space host — shows the full audio player */
+  members?: number;
   isOwner?: boolean;
-  /** Host connection status (members see this; owners are always "online" to themselves) */
   isOwnerOnline?: boolean;
   ownerName?: string;
   spaceStatus?: SpaceStatus;
-  track?: Track | null;
+  track: PlaybackState | null;
   queue?: QueueItem[];
-  /** Tracks from user storage for the custom picker */
   libraryTracks?: LibraryTrack[];
   libraryLoading?: boolean;
   progressSec?: number;
   isPlaying?: boolean;
+  connectionStatus: SpaceConnectionStatus;
   onAddTrack?: (payload: AddTrackPayload) => void;
   onVote?: (queueItemId: string, value: 1 | -1) => void;
   onPlay?: () => void;
@@ -45,7 +43,7 @@ interface SpaceRoomProps {
 
 export function SpaceRoom({
   spaceName = "Space",
-  members = [],
+  members = 0,
   isOwner = false,
   isOwnerOnline = true,
   ownerName = "Host",
@@ -56,6 +54,7 @@ export function SpaceRoom({
   libraryLoading = false,
   progressSec = 0,
   isPlaying = false,
+  connectionStatus,
   onAddTrack,
   onVote,
   onPlay,
@@ -65,7 +64,12 @@ export function SpaceRoom({
   if (spaceStatus === "CLOSED") {
     return (
       <div className="vybe-stage vybe-washi flex min-h-full flex-1 flex-col">
-        <SpaceHeader spaceName={spaceName} members={members} isOwner={isOwner} />
+        <SpaceHeader
+          spaceName={spaceName}
+          members={members}
+          connectionStatus={connectionStatus}
+          isOwner={isOwner}
+        />
         <main className="flex flex-1 items-center justify-center px-4 py-16">
           <Container className="max-w-md text-center">
             <h2 className="font-heading text-xl font-medium tracking-tight">
@@ -86,6 +90,7 @@ export function SpaceRoom({
       <SpaceHeader
         spaceName={spaceName}
         members={members}
+        connectionStatus={connectionStatus}
         isOwner={isOwner}
         actions={
           <div className="flex items-center gap-2 sm:gap-3">
@@ -108,9 +113,6 @@ export function SpaceRoom({
       <main className="scrollbar-hide flex min-h-0 flex-1 flex-col overflow-hidden py-6 sm:py-8">
         <Container className="flex min-h-0 flex-1 flex-col overflow-hidden">
           {isOwner ? (
-            /* —— Owner ——
-               Phone: queue uses full height; host player floats at bottom.
-               Desktop: queue + full player side-by-side. */
             <>
               <div className="flex min-h-0 flex-1 flex-col overflow-hidden pb-21 lg:grid lg:grid-cols-[minmax(0,1fr)_minmax(260px,380px)] lg:gap-8 lg:pb-0">
                 <div className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-xl border border-border/70 bg-card/40 p-4 sm:p-5">
@@ -121,7 +123,7 @@ export function SpaceRoom({
                   />
                 </div>
                 <div className="hidden lg:block lg:self-start">
-                  <NowPlaying
+                  {/* <NowPlaying
                     track={track}
                     progressSec={progressSec}
                     isPlaying={isPlaying}
@@ -129,11 +131,11 @@ export function SpaceRoom({
                     onPause={onPause}
                     onSkip={onSkip}
                     className="h-auto min-h-0"
-                  />
+                  /> */}
                 </div>
               </div>
 
-              <FloatingNowPlaying
+              {/* <FloatingNowPlaying
                 track={track}
                 progressSec={progressSec}
                 isPlaying={isPlaying}
@@ -141,22 +143,19 @@ export function SpaceRoom({
                 onPause={onPause}
                 onSkip={onSkip}
                 className="lg:hidden"
-              />
+              /> */}
             </>
           ) : (
-            /* —— Member ——
-               Phone: queue full height; now-playing preview floats at bottom.
-               Desktop: preview on top + queue below. */
             <>
               <div className="mx-auto flex min-h-0 w-full max-w-5xl flex-1 flex-col overflow-hidden pb-21 lg:gap-5 lg:pb-0">
-                <NowPlayingPreview
+                {/* <NowPlayingPreview
                   track={track}
                   progressSec={progressSec}
                   isPlaying={isPlaying}
                   isOwnerOnline={isOwnerOnline}
                   ownerName={ownerName}
                   className="hidden shrink-0 lg:block"
-                />
+                /> */}
                 <div className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-xl border border-border/70 bg-card/40 p-4 sm:p-5">
                   <QueueList
                     items={queue}
@@ -166,14 +165,14 @@ export function SpaceRoom({
                 </div>
               </div>
 
-              <FloatingNowPlayingPreview
+              {/* <FloatingNowPlayingPreview
                 track={track}
                 progressSec={progressSec}
                 isPlaying={isPlaying}
                 isOwnerOnline={isOwnerOnline}
                 ownerName={ownerName}
                 className="lg:hidden"
-              />
+              /> */}
             </>
           )}
         </Container>

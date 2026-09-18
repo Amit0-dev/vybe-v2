@@ -41,7 +41,7 @@ export function JoinSpaceDialog() {
         const response = await joinSpaceMutation.mutateAsync(values);
 
         reset();
-        router.push(`/space/${response.membership.spaceId}?spaceName=${response.membership.space.name}`);
+        router.push(`/space/${response.membership.spaceId}?spaceName=${response.membership.spaceName}`);
     }
 
     function handleOpenChange(open: boolean) {

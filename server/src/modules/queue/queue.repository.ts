@@ -39,6 +39,16 @@ export async function createQueueItem(trackId: string, spaceId: string) {
             spaceId,
             trackId,
         },
+        select: {
+            id: true,
+            createdAt: true,
+            updatedAt: true,
+            score: true,
+            spaceId: true,
+            trackId: true,
+            status: true,
+            track: true,
+        },
     });
 }
 

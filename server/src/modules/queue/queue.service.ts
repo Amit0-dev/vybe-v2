@@ -67,12 +67,7 @@ export async function addTrackToQueue(spaceId: string, trackId: string, userId: 
         broadcastToSpace(spaceId, {
             type: RealtimeEvent.QUEUE_ITEM_ADDED,
             spaceId,
-            queueItem: {
-                id: queueItem.id,
-                trackId: queueItem.trackId,
-                score: queueItem.score,
-                status: queueItem.status,
-            },
+            queueItem
         });
 
         return {

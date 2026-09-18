@@ -14,7 +14,7 @@ export async function createSpace(input: CreateSpaceRecord) {
             data: input,
             select: {
                 id: true,
-            }
+            },
         });
 
         await tx.spaceMember.create({
@@ -54,12 +54,9 @@ export async function createMembership(userId: string, spaceId: string) {
             role: "PARTICIPANT",
         },
         select: {
-            id: true,
-            role: true,
-            spaceId: true,
-            joinedAt: true,
             space: {
                 select: {
+                    id: true,
                     name: true,
                 },
             },
@@ -159,7 +156,7 @@ export async function findSpacesByUserId(userId: string) {
                             name: true,
                             email: true,
                             image: true,
-                        }
+                        },
                     },
                 },
             },

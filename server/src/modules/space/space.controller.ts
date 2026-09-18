@@ -28,11 +28,8 @@ export const joinSpaceController: RequestHandler = async (req, res) => {
 
     return res.status(201).json({
         membership: {
-            id: membership.id,
-            spaceId: membership.spaceId,
-            role: membership.role,
-            space: { name: membership.space.name },
-            joinedAt: membership.joinedAt,
+            spaceId: membership.space.id,
+            spaceName: membership.space.name,
         },
     });
 };

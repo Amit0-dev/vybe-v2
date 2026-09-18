@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { SpacePageClient } from "@/features/space/components/SpaceDemoRoom";
+import { SpacePageClient } from "@/features/space/components/SpacePageClient";
 
 interface SpacePageProps {
     params: Promise<{ spaceId: string }>;
