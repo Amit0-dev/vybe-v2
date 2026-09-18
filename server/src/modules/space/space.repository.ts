@@ -12,6 +12,9 @@ export async function createSpace(input: CreateSpaceRecord) {
     return prisma.$transaction(async (tx) => {
         const space = await tx.space.create({
             data: input,
+            select: {
+                id: true,
+            }
         });
 
         await tx.spaceMember.create({
@@ -49,6 +52,17 @@ export async function createMembership(userId: string, spaceId: string) {
             spaceId,
             userId,
             role: "PARTICIPANT",
+        },
+        select: {
+            id: true,
+            role: true,
+            spaceId: true,
+            joinedAt: true,
+            space: {
+                select: {
+                    name: true,
+                },
+            },
         },
     });
 }
@@ -132,6 +146,7 @@ export async function findSpacesByUserId(userId: string) {
         where: { userId },
         select: {
             role: true,
+            joinedAt: true,
             space: {
                 select: {
                     id: true,
@@ -139,6 +154,13 @@ export async function findSpacesByUserId(userId: string) {
                     joinCode: true,
                     status: true,
                     createdAt: true,
+                    owner: {
+                        select: {
+                            name: true,
+                            email: true,
+                            image: true,
+                        }
+                    },
                 },
             },
         },

@@ -57,7 +57,7 @@ export function SpacesGrid() {
 
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
                 {spaces.map((space) => (
-                    <SpaceCard key={space.id} {...space} />
+                    <SpaceCard key={space.spaceId} space={space} />
                 ))}
                 <CreateSpaceCard
                     onClick={() => {

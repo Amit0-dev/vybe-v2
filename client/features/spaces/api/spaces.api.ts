@@ -4,17 +4,23 @@ import { CreateSpaceInput, JoinSpaceInput } from "../schemas/space.schema";
 export type SpaceStatus = "ACTIVE" | "CLOSED";
 export type SpaceMemberRole = "OWNER" | "PARTICIPANT";
 
-export interface Space {
-    id: string;
-    name: string;
-    joinCode: string;
-    status: SpaceStatus;
-    role: SpaceMemberRole;
-    createdAt: string;
+export interface Spaces {
+    spaceId: string;
+    spaceName: string;
+    spaceJoinCode: string;
+    spaceStatus: SpaceStatus;
+    loggedInUserrole: SpaceMemberRole;
+    owner: {
+        name: string;
+        email: string;
+        image: string | null;
+    };
+    spaceCreatedAt: string;
+    membershipJoinedAt: string;
 }
 
 interface GetSpacesResponse {
-    spaces: Space[];
+    spaces: Spaces[];
 }
 
 export function getSpaces() {
@@ -22,7 +28,9 @@ export function getSpaces() {
 }
 
 export interface CreateSpaceResponse {
-    space: Space;
+    space: {
+        id: string;
+    };
 }
 
 export function createSpace(input: CreateSpaceInput) {
@@ -38,6 +46,9 @@ export interface JoinSpaceResponse {
         spaceId: string;
         role: SpaceMemberRole;
         joinedAt: string;
+        space: {
+            name: string;
+        };
     };
 }
 

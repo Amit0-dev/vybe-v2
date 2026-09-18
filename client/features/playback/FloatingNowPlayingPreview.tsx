@@ -3,7 +3,7 @@
 import { Music2 } from "lucide-react";
 import type { Track } from "@/lib/types";
 import { cn } from "@/lib/utils";
-import { OwnerPresence } from "@/features/space/OwnerPresence";
+import { OwnerPresence } from "@/features/space/components/OwnerPresence";
 
 interface FloatingNowPlayingPreviewProps {
   track?: Track | null;

@@ -3,7 +3,7 @@
 import { Music2, PauseCircle } from "lucide-react";
 import type { Track } from "@/lib/types";
 import { formatDuration, cn } from "@/lib/utils";
-import { OwnerPresence } from "@/features/space/OwnerPresence";
+import { OwnerPresence } from "@/features/space/components/OwnerPresence";
 
 interface NowPlayingPreviewProps {
   track?: Track | null;

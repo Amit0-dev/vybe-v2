@@ -18,15 +18,7 @@ export const createSpaceController: RequestHandler = async (req, res) => {
 
     const space = await createSpace(input, user.id);
 
-    return res.status(201).json({
-        space: {
-            id: space.id,
-            name: space.name,
-            joinCode: space.joinCode,
-            status: space.status,
-            createdAt: space.createdAt,
-        },
-    });
+    return res.status(201).json({ space: { id: space.id } });
 };
 
 export const joinSpaceController: RequestHandler = async (req, res) => {
@@ -39,6 +31,7 @@ export const joinSpaceController: RequestHandler = async (req, res) => {
             id: membership.id,
             spaceId: membership.spaceId,
             role: membership.role,
+            space: { name: membership.space.name },
             joinedAt: membership.joinedAt,
         },
     });
@@ -47,9 +40,11 @@ export const joinSpaceController: RequestHandler = async (req, res) => {
 export const getSpaceController: RequestHandler = async (req, res) => {
     const { spaceId } = parseSpaceIdParams(req.params);
 
-    const space = getSpace(spaceId);
+    const space = await getSpace(spaceId);
 
-    return res.status(200).json({ space });
+    const isOwner = space.ownerId === res.locals.user.id;
+
+    return res.status(200).json({ ...space, isOwner });
 };
 
 export const getSpaceMembersController: RequestHandler = async (req, res) => {
@@ -87,12 +82,14 @@ export const getSpacesController: RequestHandler = async (_req, res) => {
 
     return res.status(200).json({
         spaces: memberships.map((membership) => ({
-            id: membership.space.id,
-            name: membership.space.name,
-            joinCode: membership.space.joinCode,
-            status: membership.space.status,
-            role: membership.role,
-            createdAt: membership.space.createdAt,
+            spaceId: membership.space.id,
+            spaceName: membership.space.name,
+            spaceJoinCode: membership.space.joinCode,
+            spaceStatus: membership.space.status,
+            loggedInUserrole: membership.role,
+            owner: membership.space.owner,
+            spaceCreatedAt: membership.space.createdAt,
+            membershipJoinedAt: membership.joinedAt,
         })),
     });
 };
