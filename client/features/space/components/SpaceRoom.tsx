@@ -133,6 +133,11 @@ export function SpaceRoom({
                     {isOwner ? (
                         <>
                             <YouTubePlayer
+                                videoId={
+                                    track?.track.source === "YOUTUBE"
+                                        ? track.track.sourceId
+                                        : null
+                                }
                                 onReady={(handle) => {
                                     if (ytPlayerRef) ytPlayerRef.current = handle;
                                 }}

@@ -11,6 +11,7 @@ export interface YouTubePlayerHandle {
 }
 
 interface YouTubePlayerProps {
+    videoId?: string | null;
     onReady: (handle: YouTubePlayerHandle) => void;
     onEnded: () => void;
     onPlay: () => void;
@@ -51,9 +52,16 @@ declare global {
     }
 }
 
-export function YouTubePlayer({ onReady, onEnded, onPlay, onPause }: YouTubePlayerProps) {
+export function YouTubePlayer({ videoId = null, onReady, onEnded, onPlay, onPause }: YouTubePlayerProps) {
     const containerRef = useRef<HTMLDivElement>(null);
     const playerRef = useRef<YouTubePlayerInstance | null>(null);
+    const videoIdRef = useRef<string | null>(videoId);
+    const callbacksRef = useRef({ onReady, onEnded, onPlay, onPause });
+
+    useEffect(() => {
+        videoIdRef.current = videoId;
+        callbacksRef.current = { onReady, onEnded, onPlay, onPause };
+    }, [onEnded, onPause, onPlay, onReady, videoId]);
 
     const initializePlayer = useCallback(() => {
         if (!containerRef.current || !window.YT?.Player || playerRef.current) return;
@@ -67,7 +75,9 @@ export function YouTubePlayer({ onReady, onEnded, onPlay, onPause }: YouTubePlay
                     const player = playerRef.current;
                     if (!player) return;
 
-                    onReady({
+                    if (videoIdRef.current) player.loadVideoById(videoIdRef.current);
+
+                    callbacksRef.current.onReady({
                         loadVideoById: (videoId) => player.loadVideoById(videoId),
                         play: () => player.playVideo(),
                         pause: () => player.pauseVideo(),
@@ -76,13 +86,13 @@ export function YouTubePlayer({ onReady, onEnded, onPlay, onPause }: YouTubePlay
                 },
                 onStateChange: (event) => {
                     if (!window.YT) return;
-                    if (event.data === window.YT.PlayerState.ENDED) onEnded();
-                    if (event.data === window.YT.PlayerState.PLAYING) onPlay();
-                    if (event.data === window.YT.PlayerState.PAUSED) onPause();
+                    if (event.data === window.YT.PlayerState.ENDED) callbacksRef.current.onEnded();
+                    if (event.data === window.YT.PlayerState.PLAYING) callbacksRef.current.onPlay();
+                    if (event.data === window.YT.PlayerState.PAUSED) callbacksRef.current.onPause();
                 },
             },
         });
-    }, [onEnded, onPause, onPlay, onReady]);
+    }, []);
 
     useEffect(() => {
         if (window.YT?.Player) {
@@ -98,6 +108,12 @@ export function YouTubePlayer({ onReady, onEnded, onPlay, onPause }: YouTubePlay
             }
         };
     }, [initializePlayer]);
+
+    useEffect(() => {
+        if (videoId && playerRef.current) {
+            playerRef.current.loadVideoById(videoId);
+        }
+    }, [videoId]);
 
     return (
         <>

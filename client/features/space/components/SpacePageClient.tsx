@@ -118,16 +118,22 @@ export function SpacePageClient({ spaceId }: { spaceId: string }) {
     }, [isPlaying]);
 
     const handlePlay = useCallback(async () => {
-        if (currentPlayback) {
-            if (currentPlayback.track.source === "YOUTUBE") ytPlayerRef.current?.play();
-            if (currentPlayback.track.source === "CUSTOM") void audioRef.current?.play();
-            return;
-        }
+        try {
+            if (currentPlayback) {
+                if (currentPlayback.track.source === "YOUTUBE") ytPlayerRef.current?.play();
+                if (currentPlayback.track.source === "CUSTOM") {
+                    await audioRef.current?.play();
+                }
+                return;
+            }
 
-        const response = await startPlaybackMutation.mutateAsync();
-        if (response.queueItem) {
-            applyPlayback(response.queueItem);
-            await loadPlaybackItem(response.queueItem, true);
+            const response = await startPlaybackMutation.mutateAsync();
+            if (response.queueItem) {
+                applyPlayback(response.queueItem);
+                await loadPlaybackItem(response.queueItem, true);
+            }
+        } catch (error) {
+            toast.error(error instanceof ApiError ? error.message : "Could not start playback");
         }
     }, [applyPlayback, currentPlayback, loadPlaybackItem, startPlaybackMutation]);
 

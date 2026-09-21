@@ -1,6 +1,6 @@
 "use client";
 
-import type { RefObject } from "react";
+import { useEffect, type RefObject } from "react";
 
 interface CustomAudioPlayerProps {
     src: string;
@@ -19,6 +19,12 @@ export function CustomAudioPlayer({
     onPlay,
     onPause,
 }: CustomAudioPlayerProps) {
+    useEffect(() => {
+        if (!src || !autoPlay || !playerRef.current) return;
+
+        void playerRef.current.play().catch(() => undefined);
+    }, [autoPlay, playerRef, src]);
+
     return (
         <audio
             ref={playerRef}
