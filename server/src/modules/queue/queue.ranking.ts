@@ -59,7 +59,7 @@ export async function removeQueueItem(spaceId: string, queueItemId: string) {
 }
 
 export async function getQueueRanking(spaceId: string) {
-    return redis.zRangeWithScores(getRankingKey(spaceId), 0, -1);
+    return redis.zRangeWithScores(getRankingKey(spaceId), 0, -1, {REV: true});
 }
 
 export async function repairQueueRanking(
