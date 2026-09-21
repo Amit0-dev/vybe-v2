@@ -1,16 +1,7 @@
-import type { QueueItemStatus } from "@/features/space/realtime/space-ws.types";
-import type { ApiTrack } from "@/features/queue/types/queue.types";
+import type { ApiQueueItem } from "@/features/queue/types/queue.types";
 
-export interface ApiPlaybackState {
-    id: string;
-    spaceId: string;
-    trackId: string;
-    status: QueueItemStatus;
-    score: number;
-    createdAt: string;
-    updatedAt: string;
-    track: ApiTrack;
-}
+/** Playing item is the same shape as a queue item (status PLAYING). */
+export type ApiPlaybackState = ApiQueueItem;
 
 export interface PlaybackUrlResponse {
     url: string;
@@ -21,11 +12,15 @@ export interface StartPlaybackResponse {
 }
 
 export interface CompletePlaybackResponse {
-    completedQueueItem: ApiPlaybackState | null;
-    nextQueueItem: ApiPlaybackState | null;
+    queueItem: {
+        completedQueueItem: ApiPlaybackState | null;
+        nextQueueItem: ApiPlaybackState | null;
+    };
 }
 
 export interface SkipPlaybackResponse {
-    skippedQueueItem: ApiPlaybackState | null;
-    nextQueueItem: ApiPlaybackState | null;
+    queueItem: {
+        skippedQueueItem: ApiPlaybackState | null;
+        nextQueueItem: ApiPlaybackState | null;
+    };
 }

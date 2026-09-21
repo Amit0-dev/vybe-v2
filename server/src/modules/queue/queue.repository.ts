@@ -152,6 +152,21 @@ export async function findQueueItemsByIds(queueItemIds: string[]) {
     });
 }
 
+export async function findQueueItemVotes(queueItemIds: string[], userId: string) {
+    return prisma.queueItemVote.findMany({
+        where: {
+            userId,
+            queueItemId: {
+                in: queueItemIds,
+            },
+        },
+        select: {
+            queueItemId: true,
+            value: true,
+        },
+    });
+}
+
 export async function transitionQueueItemStatus(
     queueItemId: string,
     currentStatus: QueueItemStatus,

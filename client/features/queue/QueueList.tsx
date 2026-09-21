@@ -4,11 +4,11 @@ import { useEffect, useRef, useState } from "react";
 import { LayoutGroup } from "framer-motion";
 import { ArrowUp } from "lucide-react";
 import { cn } from "@/lib/utils";
-import type { QueueItem } from "../space/realtime/space-ws.types";
+import type { ApiQueueItem } from "./types/queue.types";
 import { QueueItem as QueueItemComponent } from "./QueueItem";
 
 interface QueueListProps {
-    items?: QueueItem[];
+    items?: ApiQueueItem[];
     onVote?: (queueItemId: string, value: 1 | -1) => void;
     className?: string;
     isVoting: boolean;

@@ -41,7 +41,7 @@ export const addQueueItemController: RequestHandler = async (req, res) => {
 export const getQueueController: RequestHandler = async (req, res) => {
     const { spaceId } = parseSpaceIdParams(req.params);
 
-    const queue = await getQueue(spaceId);
+    const queue = await getQueue(spaceId, res.locals.user.id);
 
     return res.status(200).json({
         queue,

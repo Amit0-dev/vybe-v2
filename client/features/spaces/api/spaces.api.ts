@@ -1,26 +1,11 @@
 import { apiClient } from "@/lib/api-client";
 import { CreateSpaceInput, JoinSpaceInput } from "../schemas/space.schema";
+import type { ApiSpaceListItem } from "../types/spaces.types";
 
-export type SpaceStatus = "ACTIVE" | "CLOSED";
-export type SpaceMemberRole = "OWNER" | "PARTICIPANT";
-
-export interface Spaces {
-    spaceId: string;
-    spaceName: string;
-    spaceJoinCode: string;
-    spaceStatus: SpaceStatus;
-    loggedInUserrole: SpaceMemberRole;
-    owner: {
-        name: string;
-        email: string;
-        image: string | null;
-    };
-    spaceCreatedAt: string;
-    membershipJoinedAt: string;
-}
+export type { SpaceStatus, SpaceMemberRole, ApiSpaceListItem, Spaces } from "../types/spaces.types";
 
 interface GetSpacesResponse {
-    spaces: Spaces[];
+    spaces: ApiSpaceListItem[];
 }
 
 export function getSpaces() {

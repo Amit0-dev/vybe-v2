@@ -1,42 +1,27 @@
-import type { QueueItemStatus, TrackSource } from "../realtime/space-ws.types";
+import type { SpaceMemberRole, SpaceStatus } from "@/features/spaces/types/spaces.types";
+import type { ApiQueueItem } from "@/features/queue/types/queue.types";
 
-type Track = {
+export interface ApiSpaceDetail {
     id: string;
+    name: string;
+    joinCode: string;
+    status: SpaceStatus;
+    role: SpaceMemberRole;
+    ownerId: string;
     createdAt: string;
     updatedAt: string;
-    title: string;
-    artist: string | null;
-    durationSec: number;
-    source: TrackSource;
-    sourceId: string | null;
-    storageKey: string | null;
-};
+    isOwner: boolean;
+}
 
-type CreatedQueueItem = {
-    id: string;
-    trackId: string;
-    spaceId: string;
-    status: QueueItemStatus;
-    score: number;
-    createdAt: string;
-    updatedAt: string;
-    track: Track;
-};
+/** @deprecated Use ApiSpaceDetail */
+export type SpacePreview = ApiSpaceDetail;
 
-type VotedExistingQueueItem = {
-    id: string;
-    trackId: string;
-    spaceId: string;
-    status: QueueItemStatus;
-    score: number;
-    createdAt: string;
-    updatedAt: string;
-};
+type VotedExistingQueueItem = Omit<ApiQueueItem, "track">;
 
 export type AddYouTubeTrackResponse =
     | {
           action: "CREATED";
-          queueItem: CreatedQueueItem;
+          queueItem: ApiQueueItem;
       }
     | {
           action: "VOTED_EXISTING";

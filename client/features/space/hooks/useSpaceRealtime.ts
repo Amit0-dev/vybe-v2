@@ -1,19 +1,19 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import type { ApiQueueItem } from "@/features/queue/types/queue.types";
 import type {
-    QueueItem,
     ServerMessage,
     SpaceConnectionStatus,
     SpaceSnapshot,
-} from "../realtime/space-ws.types";
+} from "../types/ws.types";
 import { createSpaceWsClient } from "../realtime/space-ws.client";
 
-function sortQueue(queue: QueueItem[]): QueueItem[] {
+function sortQueue(queue: ApiQueueItem[]): ApiQueueItem[] {
     return [...queue].sort((a, b) => b.score - a.score || a.id.localeCompare(b.id));
 }
 
-function upsertQueueItem(queue: QueueItem[], incoming: QueueItem): QueueItem[] {
+function upsertQueueItem(queue: ApiQueueItem[], incoming: ApiQueueItem): ApiQueueItem[] {
     const exists = queue.some((item) => item.id === incoming.id);
 
     const updatedQueue = exists
@@ -30,7 +30,7 @@ export function useSpaceRealtime(spaceId: string) {
 
     const [error, setError] = useState<string | null>(null);
 
-    const applyQueueItem = useCallback((queueItem: QueueItem) => {
+    const applyQueueItem = useCallback((queueItem: ApiQueueItem) => {
         setSnapshot((current) => {
             if (!current) return current;
 

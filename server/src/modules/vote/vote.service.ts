@@ -123,6 +123,7 @@ export async function voteOnQueueItem(
 
     return {
         ...result,
+        userVote: result.vote === 0 ? null : result.vote,
         score,
     };
 }

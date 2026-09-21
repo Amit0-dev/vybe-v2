@@ -10,8 +10,10 @@ import { QueueList } from "@/features/queue/QueueList";
 import { AddTrackDialog, type AddTrackPayload } from "@/features/queue/AddTrackDialog";
 import { Container } from "@/components/layout/Container";
 import type { LibraryTrack } from "@/features/queue/types/queue.types";
-import type { SpaceStatus } from "@/features/spaces/api/spaces.api";
-import type { PlaybackState, QueueItem, SpaceConnectionStatus } from "../realtime/space-ws.types";
+import type { ApiQueueItem } from "@/features/queue/types/queue.types";
+import type { ApiPlaybackState } from "@/features/playback/types/playback.types";
+import type { SpaceStatus } from "@/features/spaces/types/spaces.types";
+import type { SpaceConnectionStatus } from "../types/ws.types";
 
 interface SpaceRoomProps {
     spaceName?: string;
@@ -20,8 +22,8 @@ interface SpaceRoomProps {
     isOwnerOnline?: boolean;
     ownerName?: string;
     spaceStatus?: SpaceStatus;
-    track: PlaybackState | null;
-    queue?: QueueItem[];
+    track: ApiPlaybackState | null;
+    queue?: ApiQueueItem[];
     libraryTracks?: LibraryTrack[];
     libraryLoading?: boolean;
     progressSec?: number;

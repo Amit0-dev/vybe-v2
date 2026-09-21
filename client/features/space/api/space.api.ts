@@ -1,18 +1,8 @@
-import { SpaceMemberRole, SpaceStatus } from "@/features/spaces/api/spaces.api";
 import { apiClient } from "@/lib/api-client";
+import type { ApiSpaceDetail } from "../types/space.types";
 
-export interface SpacePreview {
-    id: string;
-    name: string;
-    joinCode: string;
-    status: SpaceStatus;
-    role: SpaceMemberRole;
-    ownerId: string;
-    createdAt: string;
-    updatedAt: string;
-    isOwner: boolean;
-}
+export type { ApiSpaceDetail, SpacePreview } from "../types/space.types";
 
 export function getSpace(spaceId: string) {
-    return apiClient<SpacePreview>(`/api/spaces/${spaceId}`);
+    return apiClient<ApiSpaceDetail>(`/api/spaces/${spaceId}`);
 }

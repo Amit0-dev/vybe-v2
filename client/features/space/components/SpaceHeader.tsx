@@ -3,7 +3,7 @@ import { ArrowLeft } from "lucide-react";
 import { Container } from "@/components/layout/Container";
 import { ThemeToggle } from "@/components/theme/ThemeToggle";
 import { cn } from "@/lib/utils";
-import type { SpaceConnectionStatus } from "../realtime/space-ws.types";
+import type { SpaceConnectionStatus } from "../types/ws.types";
 
 interface SpaceHeaderProps {
   spaceName?: string;

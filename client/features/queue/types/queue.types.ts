@@ -1,4 +1,5 @@
-import type { QueueItemStatus, TrackSource } from "@/features/space/realtime/space-ws.types";
+export type QueueItemStatus = "QUEUED" | "PLAYING" | "PLAYED" | "SKIPPED";
+export type TrackSource = "YOUTUBE" | "CUSTOM";
 
 export interface ApiTrack {
     id: string;
@@ -28,6 +29,7 @@ export interface ApiVoteResponse {
     changed: boolean;
     delta: number;
     vote: -1 | 0 | 1;
+    userVote: 1 | -1 | null;
     score: number | null;
 }
 

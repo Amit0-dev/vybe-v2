@@ -69,7 +69,7 @@ export function initializeRealtime(server: Server) {
 
             // add to Space connections
             addConnection(spaceId, realtimeSocket);
-            const snapshot = await getSpaceRealtimeSnapshot(spaceId);
+            const snapshot = await getSpaceRealtimeSnapshot(spaceId, user.id);
 
             if (socket.readyState === WebSocket.OPEN) {
                 socket.send(

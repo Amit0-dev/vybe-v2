@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { CalendarDays, Crown, Music2 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import type { Spaces } from "../api/spaces.api";
+import type { ApiSpaceListItem } from "../types/spaces.types";
 
 /** Theme-matched accents only — cream + teal family, no loud random hues. */
 export const SPACE_CARD_ACCENTS = ["sage", "moss", "mist"] as const;
@@ -50,7 +50,7 @@ const spaceStatus = {
     CLOSED: "CLOSED",
 } as const;
 
-export function SpaceCard({ space, className }: { space: Spaces; className?: string }) {
+export function SpaceCard({ space, className }: { space: ApiSpaceListItem; className?: string }) {
     const isActive = space.spaceStatus === spaceStatus.ACTIVE;
     const isOwner = space.loggedInUserrole === "OWNER";
     const tone = getSpaceCardAccent(space.spaceId);

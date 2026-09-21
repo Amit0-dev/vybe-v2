@@ -4,10 +4,10 @@ import { motion, useReducedMotion } from "framer-motion";
 import { Music2 } from "lucide-react";
 import { VoteControls } from "@/features/voting/VoteControls";
 import { formatDuration, cn } from "@/lib/utils";
-import type { QueueItem as QueueItemType } from "../space/realtime/space-ws.types";
+import type { ApiQueueItem } from "./types/queue.types";
 
 interface QueueItemProps {
-    item: QueueItemType;
+    item: ApiQueueItem;
     index?: number;
     onVote?: (queueItemId: string, value: 1 | -1) => void;
     className?: string;
@@ -73,7 +73,7 @@ export function QueueItem({ item, index, onVote, className, isVoting }: QueueIte
 
                 <VoteControls
                     score={score}
-                    // userVote={userVote}
+                    userVote={item.userVote ?? null}
                     onVote={(value) => onVote?.(id, value)}
                     orientation="vertical"
                     className="pl-1"

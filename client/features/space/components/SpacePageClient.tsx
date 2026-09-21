@@ -1,8 +1,7 @@
 "use client";
 
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { SpaceRoom } from "@/features/space/components/SpaceRoom";
-import type { ApiQueueItem } from "@/features/queue/types/queue.types";
 import { useSpace } from "../hooks/useSpace";
 import { useSpaceRealtime } from "../hooks/useSpaceRealtime";
 import { useAddYoutubeTrack } from "../hooks/useAddYoutubeTrack";
@@ -11,49 +10,51 @@ import { useVoteQueueItem } from "@/features/queue/hooks/useVoteQueueItem";
 import { ApiError } from "@/lib/api-client";
 import { toast } from "sonner";
 
-function applyVote(item: ApiQueueItem, value: 1 | -1): ApiQueueItem {
-    const prev = item.userVote ?? null;
-    let nextVote: 1 | -1 | null;
-    let delta: number;
-
-    if (prev === value) {
-        // Toggle off
-        nextVote = null;
-        delta = -value;
-    } else if (prev == null) {
-        nextVote = value;
-        delta = value;
-    } else {
-        // Switch from opposite vote
-        nextVote = value;
-        delta = value * 2;
-    }
-
-    return {
-        ...item,
-        userVote: nextVote,
-        score: item.score + delta,
-    };
-}
-
-function sortByScore(items: ApiQueueItem[]): ApiQueueItem[] {
-    return [...items].sort((a, b) => b.score - a.score || a.id.localeCompare(b.id));
-}
-
 export function SpacePageClient({ spaceId }: { spaceId: string }) {
     const { data: spaceData, isLoading: isSpaceLoading, error: spaceError } = useSpace(spaceId);
     const { status, snapshot, error: realtimeError, applyQueueItem } = useSpaceRealtime(spaceId);
     const addYoutubeMutation = useAddYoutubeTrack(spaceId);
 
     const voteMutation = useVoteQueueItem(spaceId);
+    const [userVoteMap, setUserVoteMap] = useState<Map<string, 1 | -1 | null>>(new Map());
 
     const { isPending: isAddingTrack, error: addTrackError } = addYoutubeMutation;
 
     const { isPending: isVoting, error: voteError } = voteMutation;
 
     const queueList = snapshot?.queue ?? [];
+    const enrichedQueue = useMemo(
+        () =>
+            queueList.map((item) => ({
+                ...item,
+                userVote: userVoteMap.has(item.id)
+                    ? userVoteMap.get(item.id) ?? null
+                    : item.userVote ?? null,
+            })),
+        [queueList, userVoteMap],
+    );
     const memberCount = snapshot?.memberCount ?? 0;
     const currentPlayback = snapshot?.playback ?? null;
+
+    useEffect(() => {
+        const serverVotes = queueList.filter((item) => item.userVote !== undefined);
+
+        if (serverVotes.length === 0) return;
+
+        setUserVoteMap((previous) => {
+            const next = new Map(previous);
+            let changed = false;
+
+            for (const item of serverVotes) {
+                if (next.get(item.id) !== item.userVote) {
+                    next.set(item.id, item.userVote ?? null);
+                    changed = true;
+                }
+            }
+
+            return changed ? next : previous;
+        });
+    }, [queueList]);
 
     const handleAddTrack = useCallback(
         async (payload: AddTrackPayload) => {
@@ -79,9 +80,15 @@ export function SpacePageClient({ spaceId }: { spaceId: string }) {
     const handleVote = useCallback(
         async (queueItemId: string, value: 1 | -1) => {
             try {
-                await voteMutation.mutateAsync({
+                const response = await voteMutation.mutateAsync({
                     queueItemId,
                     value,
+                });
+
+                setUserVoteMap((previous) => {
+                    const next = new Map(previous);
+                    next.set(queueItemId, response.userVote);
+                    return next;
                 });
             } catch (error) {
                 const message =
@@ -123,7 +130,7 @@ export function SpacePageClient({ spaceId }: { spaceId: string }) {
             ownerName={"Test Owner"}
             spaceStatus={spaceData.status}
             track={currentPlayback}
-            queue={queueList}
+            queue={enrichedQueue}
             libraryTracks={[]}
             connectionStatus={status}
             onAddTrack={handleAddTrack}

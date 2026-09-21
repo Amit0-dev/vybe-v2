@@ -13,6 +13,7 @@ import {
     findActiveQueueItem,
     findQueueItemById,
     findQueueItemInSpace,
+    findQueueItemVotes,
     findQueueItemsByIds,
     markSpaceForReconciliation,
     transitionQueueItemStatus,
@@ -98,7 +99,7 @@ export async function addTrackToQueue(spaceId: string, trackId: string, userId: 
     }
 }
 
-export async function getQueue(spaceId: string) {
+export async function getQueue(spaceId: string, userId: string) {
     const ranking = await getQueueRanking(spaceId);
 
     if (ranking.length === 0) {
@@ -107,9 +108,15 @@ export async function getQueue(spaceId: string) {
 
     const queueItemIds = ranking.map((item) => item.value);
 
-    const queueItems = await findQueueItemsByIds(queueItemIds);
+    const [queueItems, userVotes] = await Promise.all([
+        findQueueItemsByIds(queueItemIds),
+        findQueueItemVotes(queueItemIds, userId),
+    ]);
 
     const queueItemMap = new Map(queueItems.map((item) => [item.id, item]));
+    const userVoteMap = new Map(
+        userVotes.map((vote) => [vote.queueItemId, vote.value as 1 | -1]),
+    );
 
     return ranking
         .map((rankingItem) => {
@@ -122,6 +129,7 @@ export async function getQueue(spaceId: string) {
             return {
                 ...queueItem,
                 score: rankingItem.score,
+                userVote: userVoteMap.get(queueItem.id) ?? null,
             };
         })
         .filter((item) => item !== null);
