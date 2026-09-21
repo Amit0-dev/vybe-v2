@@ -1,7 +1,13 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import Link from "next/link";
 import { SpaceRoom } from "@/features/space/components/SpaceRoom";
+import type { YouTubePlayerHandle } from "@/features/playback/YouTubePlayer";
+import { getPlaybackAudioUrl } from "@/features/playback/api/playback.api";
+import { useCompletePlayback } from "@/features/playback/hooks/useCompletePlayback";
+import { useSkipQueueItem } from "@/features/playback/hooks/useSkipQueueItem";
+import { useStartPlayback } from "@/features/playback/hooks/useStartPlayback";
 import { useSpace } from "../hooks/useSpace";
 import { useSpaceRealtime } from "../hooks/useSpaceRealtime";
 import { useAddYoutubeTrack } from "../hooks/useAddYoutubeTrack";
@@ -16,7 +22,17 @@ export function SpacePageClient({ spaceId }: { spaceId: string }) {
     const addYoutubeMutation = useAddYoutubeTrack(spaceId);
 
     const voteMutation = useVoteQueueItem(spaceId);
+    const startPlaybackMutation = useStartPlayback(spaceId);
+    const completePlaybackMutation = useCompletePlayback(spaceId);
+    const skipPlaybackMutation = useSkipQueueItem(spaceId);
     const [userVoteMap, setUserVoteMap] = useState<Map<string, 1 | -1 | null>>(new Map());
+    const ytPlayerRef = useRef<YouTubePlayerHandle | null>(null);
+    const audioRef = useRef<HTMLAudioElement | null>(null);
+    const [customAudioUrl, setCustomAudioUrl] = useState<string | null>(null);
+    const [autoPlayCustomAudio, setAutoPlayCustomAudio] = useState(false);
+    const [isPlaying, setIsPlaying] = useState(false);
+    const [progressSec, setProgressSec] = useState(0);
+    const progressInterval = useRef<ReturnType<typeof setInterval> | null>(null);
 
     const { isPending: isAddingTrack, error: addTrackError } = addYoutubeMutation;
 
@@ -36,25 +52,107 @@ export function SpacePageClient({ spaceId }: { spaceId: string }) {
     const memberCount = snapshot?.memberCount ?? 0;
     const currentPlayback = snapshot?.playback ?? null;
 
-    useEffect(() => {
-        const serverVotes = queueList.filter((item) => item.userVote !== undefined);
+    const loadPlaybackItem = useCallback(
+        async (queueItem: NonNullable<typeof currentPlayback>, autoPlay: boolean) => {
+            setProgressSec(0);
+            setAutoPlayCustomAudio(autoPlay);
 
-        if (serverVotes.length === 0) return;
-
-        setUserVoteMap((previous) => {
-            const next = new Map(previous);
-            let changed = false;
-
-            for (const item of serverVotes) {
-                if (next.get(item.id) !== item.userVote) {
-                    next.set(item.id, item.userVote ?? null);
-                    changed = true;
-                }
+            if (queueItem.track.source === "YOUTUBE" && queueItem.track.sourceId) {
+                audioRef.current?.pause();
+                setCustomAudioUrl(null);
+                ytPlayerRef.current?.loadVideoById(queueItem.track.sourceId);
+                return;
             }
 
-            return changed ? next : previous;
+            if (queueItem.track.source === "CUSTOM") {
+                const { url } = await getPlaybackAudioUrl(spaceId, queueItem.id);
+                setCustomAudioUrl(url);
+            }
+        },
+        [spaceId],
+    );
+
+    useEffect(() => {
+        if (!spaceData?.isOwner || !currentPlayback) return;
+
+        let cancelled = false;
+
+        queueMicrotask(() => {
+            if (cancelled) return;
+
+            void loadPlaybackItem(currentPlayback, false).catch(() => {
+                toast.error("Could not load audio file");
+            });
         });
-    }, [queueList]);
+
+        return () => {
+            cancelled = true;
+        };
+    }, [currentPlayback?.id, loadPlaybackItem, spaceData?.isOwner]);
+
+    useEffect(() => {
+        if (!isPlaying) {
+            if (progressInterval.current) clearInterval(progressInterval.current);
+            return;
+        }
+
+        progressInterval.current = setInterval(() => {
+            setProgressSec((current) => current + 1);
+        }, 1000);
+
+        return () => {
+            if (progressInterval.current) clearInterval(progressInterval.current);
+        };
+    }, [isPlaying]);
+
+    const handlePlay = useCallback(async () => {
+        if (currentPlayback) {
+            if (currentPlayback.track.source === "YOUTUBE") ytPlayerRef.current?.play();
+            if (currentPlayback.track.source === "CUSTOM") void audioRef.current?.play();
+            return;
+        }
+
+        const response = await startPlaybackMutation.mutateAsync();
+        if (response.queueItem) await loadPlaybackItem(response.queueItem, true);
+    }, [currentPlayback, loadPlaybackItem, startPlaybackMutation]);
+
+    const handlePause = useCallback(() => {
+        if (currentPlayback?.track.source === "YOUTUBE") ytPlayerRef.current?.pause();
+        if (currentPlayback?.track.source === "CUSTOM") audioRef.current?.pause();
+    }, [currentPlayback?.track.source]);
+
+    const handleTrackEnded = useCallback(async () => {
+        if (!currentPlayback) return;
+
+        const response = await completePlaybackMutation.mutateAsync(currentPlayback.id);
+        const nextQueueItem = response.queueItem.nextQueueItem;
+
+        if (!nextQueueItem) {
+            setIsPlaying(false);
+            setProgressSec(0);
+            return;
+        }
+
+        await loadPlaybackItem(nextQueueItem, true);
+    }, [completePlaybackMutation, currentPlayback, loadPlaybackItem]);
+
+    const handleSkip = useCallback(async () => {
+        if (!currentPlayback) return;
+
+        const response = await skipPlaybackMutation.mutateAsync(currentPlayback.id);
+        const nextQueueItem = response.queueItem.nextQueueItem;
+
+        if (!nextQueueItem) {
+            ytPlayerRef.current?.stop();
+            audioRef.current?.pause();
+            setCustomAudioUrl(null);
+            setIsPlaying(false);
+            setProgressSec(0);
+            return;
+        }
+
+        await loadPlaybackItem(nextQueueItem, true);
+    }, [currentPlayback, loadPlaybackItem, skipPlaybackMutation]);
 
     const handleAddTrack = useCallback(
         async (payload: AddTrackPayload) => {
@@ -109,16 +207,56 @@ export function SpacePageClient({ spaceId }: { spaceId: string }) {
               ? "Unable to add track. Please try again"
               : null;
 
+    const errorMessage =
+        spaceError instanceof ApiError
+            ? spaceError.message
+            : realtimeError ?? "Unable to connect to this Space.";
+
     if (isSpaceLoading) {
-        return <div>Loading...</div>;
+        return (
+            <div className="vybe-stage vybe-washi flex h-dvh items-center justify-center">
+                <div className="flex flex-col items-center gap-4 text-center">
+                    <div className="size-10 animate-spin rounded-full border-2 border-border border-t-primary" />
+                    <p className="text-sm text-muted-foreground">Connecting to space...</p>
+                </div>
+            </div>
+        );
     }
 
     if (spaceError) {
-        return <div>Error loading space.</div>;
+        return (
+            <div className="vybe-stage flex h-dvh items-center justify-center px-4">
+                <div className="w-full max-w-sm rounded-xl border border-destructive/30 bg-card p-8 text-center">
+                    <h2 className="font-heading text-lg font-medium">Couldn&apos;t load this Space</h2>
+                    <p className="mt-2 text-sm text-muted-foreground">{errorMessage}</p>
+                    <Link
+                        href="/spaces"
+                        className="mt-6 inline-flex h-9 items-center justify-center rounded-lg bg-primary px-2.5 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/80"
+                    >
+                        Back to Spaces
+                    </Link>
+                </div>
+            </div>
+        );
     }
 
     if (!spaceData) {
-        return <div>Space data not found.</div>;
+        return (
+            <div className="vybe-stage flex h-dvh items-center justify-center px-4">
+                <div className="w-full max-w-sm rounded-xl border border-destructive/30 bg-card p-8 text-center">
+                    <h2 className="font-heading text-lg font-medium">Space not found</h2>
+                    <p className="mt-2 text-sm text-muted-foreground">
+                        This Space is unavailable or you no longer have access to it.
+                    </p>
+                    <Link
+                        href="/spaces"
+                        className="mt-6 inline-flex h-9 items-center justify-center rounded-lg bg-primary px-2.5 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/80"
+                    >
+                        Back to Spaces
+                    </Link>
+                </div>
+            </div>
+        );
     }
 
     return (
@@ -130,6 +268,14 @@ export function SpacePageClient({ spaceId }: { spaceId: string }) {
             ownerName={"Test Owner"}
             spaceStatus={spaceData.status}
             track={currentPlayback}
+            progressSec={progressSec}
+            isPlaying={isPlaying}
+            customAudioUrl={customAudioUrl}
+            autoPlayCustomAudio={autoPlayCustomAudio}
+            ytPlayerRef={ytPlayerRef}
+            audioRef={audioRef}
+            onTrackEnded={handleTrackEnded}
+            onIsPlayingChange={setIsPlaying}
             queue={enrichedQueue}
             libraryTracks={[]}
             connectionStatus={status}
@@ -138,6 +284,9 @@ export function SpacePageClient({ spaceId }: { spaceId: string }) {
             addTrackError={addTrackErrorMessage}
             onVote={handleVote}
             isVoting={isVoting}
+            onPlay={handlePlay}
+            onPause={handlePause}
+            onSkip={handleSkip}
         />
     );
 }

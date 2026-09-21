@@ -6,6 +6,8 @@ import { NowPlaying } from "@/features/playback/NowPlaying";
 import { FloatingNowPlaying } from "@/features/playback/FloatingNowPlaying";
 import { NowPlayingPreview } from "@/features/playback/NowPlayingPreview";
 import { FloatingNowPlayingPreview } from "@/features/playback/FloatingNowPlayingPreview";
+import { CustomAudioPlayer } from "@/features/playback/CustomAudioPlayer";
+import { YouTubePlayer, type YouTubePlayerHandle } from "@/features/playback/YouTubePlayer";
 import { QueueList } from "@/features/queue/QueueList";
 import { AddTrackDialog, type AddTrackPayload } from "@/features/queue/AddTrackDialog";
 import { Container } from "@/components/layout/Container";
@@ -14,6 +16,7 @@ import type { ApiQueueItem } from "@/features/queue/types/queue.types";
 import type { ApiPlaybackState } from "@/features/playback/types/playback.types";
 import type { SpaceStatus } from "@/features/spaces/types/spaces.types";
 import type { SpaceConnectionStatus } from "../types/ws.types";
+import type { RefObject } from "react";
 
 interface SpaceRoomProps {
     spaceName?: string;
@@ -37,6 +40,12 @@ interface SpaceRoomProps {
     onPlay?: () => void;
     onPause?: () => void;
     onSkip?: () => void;
+    customAudioUrl?: string | null;
+    autoPlayCustomAudio?: boolean;
+    onTrackEnded?: () => void;
+    onIsPlayingChange?: (value: boolean) => void;
+    ytPlayerRef?: RefObject<YouTubePlayerHandle | null>;
+    audioRef?: RefObject<HTMLAudioElement | null>;
 }
 
 export function SpaceRoom({
@@ -61,6 +70,12 @@ export function SpaceRoom({
     onPlay,
     onPause,
     onSkip,
+    customAudioUrl = null,
+    autoPlayCustomAudio = false,
+    onTrackEnded,
+    onIsPlayingChange,
+    ytPlayerRef,
+    audioRef,
 }: SpaceRoomProps) {
     if (spaceStatus === "CLOSED") {
         return (
@@ -117,6 +132,24 @@ export function SpaceRoom({
                 <Container className="flex min-h-0 flex-1 flex-col overflow-hidden">
                     {isOwner ? (
                         <>
+                            <YouTubePlayer
+                                onReady={(handle) => {
+                                    if (ytPlayerRef) ytPlayerRef.current = handle;
+                                }}
+                                onEnded={() => onTrackEnded?.()}
+                                onPlay={() => onIsPlayingChange?.(true)}
+                                onPause={() => onIsPlayingChange?.(false)}
+                            />
+                            {customAudioUrl && audioRef && (
+                                <CustomAudioPlayer
+                                    src={customAudioUrl}
+                                    autoPlay={autoPlayCustomAudio}
+                                    playerRef={audioRef}
+                                    onEnded={() => onTrackEnded?.()}
+                                    onPlay={() => onIsPlayingChange?.(true)}
+                                    onPause={() => onIsPlayingChange?.(false)}
+                                />
+                            )}
                             <div className="flex min-h-0 flex-1 flex-col overflow-hidden pb-21 lg:grid lg:grid-cols-[minmax(0,1fr)_minmax(260px,380px)] lg:gap-8 lg:pb-0">
                                 <div className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-xl border border-border/70 bg-card/40 p-4 sm:p-5">
                                     <QueueList
@@ -127,39 +160,39 @@ export function SpaceRoom({
                                     />
                                 </div>
                                 <div className="hidden lg:block lg:self-start">
-                                    {/* <NowPlaying
-                    track={track}
-                    progressSec={progressSec}
-                    isPlaying={isPlaying}
-                    onPlay={onPlay}
-                    onPause={onPause}
-                    onSkip={onSkip}
-                    className="h-auto min-h-0"
-                  /> */}
+                                    <NowPlaying
+                                        track={track?.track ?? null}
+                                        progressSec={progressSec}
+                                        isPlaying={isPlaying}
+                                        onPlay={onPlay}
+                                        onPause={onPause}
+                                        onSkip={onSkip}
+                                        className="h-auto min-h-0"
+                                    />
                                 </div>
                             </div>
 
-                            {/* <FloatingNowPlaying
-                track={track}
-                progressSec={progressSec}
-                isPlaying={isPlaying}
-                onPlay={onPlay}
-                onPause={onPause}
-                onSkip={onSkip}
-                className="lg:hidden"
-              /> */}
+                            <FloatingNowPlaying
+                                track={track?.track ?? null}
+                                progressSec={progressSec}
+                                isPlaying={isPlaying}
+                                onPlay={onPlay}
+                                onPause={onPause}
+                                onSkip={onSkip}
+                                className="lg:hidden"
+                            />
                         </>
                     ) : (
                         <>
                             <div className="mx-auto flex min-h-0 w-full max-w-5xl flex-1 flex-col overflow-hidden pb-21 lg:gap-5 lg:pb-0">
-                                {/* <NowPlayingPreview
-                  track={track}
-                  progressSec={progressSec}
-                  isPlaying={isPlaying}
-                  isOwnerOnline={isOwnerOnline}
-                  ownerName={ownerName}
-                  className="hidden shrink-0 lg:block"
-                /> */}
+                                <NowPlayingPreview
+                                    track={track?.track ?? null}
+                                    progressSec={progressSec}
+                                    isPlaying={isPlaying}
+                                    isOwnerOnline={isOwnerOnline}
+                                    ownerName={ownerName}
+                                    className="hidden shrink-0 lg:block"
+                                />
                                 <div className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-xl border border-border/70 bg-card/40 p-4 sm:p-5">
                                     <QueueList
                                         items={queue}
@@ -169,15 +202,14 @@ export function SpaceRoom({
                                     />
                                 </div>
                             </div>
-
-                            {/* <FloatingNowPlayingPreview
-                track={track}
-                progressSec={progressSec}
-                isPlaying={isPlaying}
-                isOwnerOnline={isOwnerOnline}
-                ownerName={ownerName}
-                className="lg:hidden"
-              /> */}
+                            <FloatingNowPlayingPreview
+                                track={track?.track ?? null}
+                                progressSec={progressSec}
+                                isPlaying={isPlaying}
+                                isOwnerOnline={isOwnerOnline}
+                                ownerName={ownerName}
+                                className="lg:hidden"
+                            />
                         </>
                     )}
                 </Container>
