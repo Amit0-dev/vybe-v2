@@ -10,6 +10,7 @@ interface VoteControlsProps {
   className?: string;
   /** Horizontal layout for compact cards */
   orientation?: "vertical" | "horizontal";
+  isVoting?: boolean
 }
 
 export function VoteControls({
@@ -18,6 +19,7 @@ export function VoteControls({
   onVote,
   className,
   orientation = "vertical",
+  isVoting
 }: VoteControlsProps) {
   const isHorizontal = orientation === "horizontal";
 
@@ -31,6 +33,7 @@ export function VoteControls({
     >
       <button
         type="button"
+        disabled={isVoting}
         onClick={() => onVote?.(1)}
         aria-label="Upvote"
         aria-pressed={userVote === 1}
@@ -62,6 +65,7 @@ export function VoteControls({
 
       <button
         type="button"
+        disabled={isVoting}
         onClick={() => onVote?.(-1)}
         aria-label="Downvote"
         aria-pressed={userVote === -1}

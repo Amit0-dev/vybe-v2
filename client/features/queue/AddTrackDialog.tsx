@@ -13,7 +13,7 @@ import {
     DialogTitle,
 } from "@/components/ui/dialog";
 import { CustomTrackPicker } from "@/features/queue/CustomTrackPicker";
-import type { LibraryTrack } from "@/lib/types";
+import type { LibraryTrack } from "@/features/queue/types/queue.types";
 import { cn } from "@/lib/utils";
 
 export type TrackSource = "youtube" | "custom";
@@ -34,6 +34,7 @@ interface AddTrackDialogProps {
     libraryLoading?: boolean;
     isLoading?: boolean;
     triggerClassName?: string;
+    onAddTrackError?: string | null;
 }
 
 type Step = "choose" | "youtube" | "custom";
@@ -44,6 +45,7 @@ export function AddTrackDialog({
     libraryLoading = false,
     isLoading = false,
     triggerClassName,
+    onAddTrackError,
 }: AddTrackDialogProps) {
     const [open, setOpen] = useState(false);
     const [step, setStep] = useState<Step>("choose");
@@ -91,7 +93,7 @@ export function AddTrackDialog({
             source: "custom",
             trackId: selected.id,
             title: selected.title,
-            artist: selected.artist,
+            artist: selected.artist ?? undefined,
         });
         handleOpenChange(false);
     }
@@ -194,9 +196,9 @@ export function AddTrackDialog({
                                 />
                             </div>
 
-                            {submitError && (
+                            {(submitError || onAddTrackError) && (
                                 <p role="alert" className="mt-2 text-sm text-destructive">
-                                    {submitError}
+                                    {submitError || onAddTrackError}
                                 </p>
                             )}
 

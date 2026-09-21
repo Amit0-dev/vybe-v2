@@ -3,7 +3,7 @@
 import { useMemo, useState } from "react";
 import { Check, Music2, Search } from "lucide-react";
 import { Input } from "@/components/ui/input";
-import type { LibraryTrack } from "@/lib/types";
+import type { LibraryTrack } from "@/features/queue/types/queue.types";
 import { formatDuration, cn } from "@/lib/utils";
 
 interface CustomTrackPickerProps {
@@ -99,26 +99,17 @@ export function CustomTrackPicker({
                     "group flex w-full items-center gap-3 rounded-lg border p-2.5 text-left transition-all",
                     "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
                     selected
-                      ? "border-primary/50 bg-vybe-muted shadow-[inset_0_0_0_1px_oklch(0.58_0.2_28_/_0.25)]"
+                      ? "border-primary/50 bg-vybe-muted shadow-[inset_0_0_0_1px_oklch(0.58_0.2_28/0.25)]"
                       : "border-border/70 bg-card/40 hover:border-primary/30 hover:bg-card",
                   )}
                 >
                   <div className="relative size-12 shrink-0 overflow-hidden rounded-md bg-muted">
-                    {track.artworkUrl ? (
-                      // eslint-disable-next-line @next/next/no-img-element
-                      <img
-                        src={track.artworkUrl}
-                        alt=""
-                        className="size-full object-cover"
+                    <div className="flex size-full items-center justify-center">
+                      <Music2
+                        className="size-4 text-muted-foreground/50"
+                        aria-hidden
                       />
-                    ) : (
-                      <div className="flex size-full items-center justify-center">
-                        <Music2
-                          className="size-4 text-muted-foreground/50"
-                          aria-hidden
-                        />
-                      </div>
-                    )}
+                    </div>
                     {selected && (
                       <span className="absolute inset-0 flex items-center justify-center bg-primary/20">
                         <span className="flex size-6 items-center justify-center rounded-full bg-primary text-primary-foreground">

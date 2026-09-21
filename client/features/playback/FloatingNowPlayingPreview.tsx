@@ -1,12 +1,12 @@
 "use client";
 
 import { Music2 } from "lucide-react";
-import type { Track } from "@/lib/types";
+import type { ApiTrack } from "@/features/queue/types/queue.types";
 import { cn } from "@/lib/utils";
 import { OwnerPresence } from "@/features/space/components/OwnerPresence";
 
 interface FloatingNowPlayingPreviewProps {
-  track?: Track | null;
+  track?: ApiTrack | null;
   progressSec?: number;
   isPlaying?: boolean;
   isOwnerOnline?: boolean;
@@ -59,21 +59,12 @@ export function FloatingNowPlayingPreview({
 
         <div className="flex items-center gap-3 px-3 py-2.5">
           <div className="relative size-11 shrink-0 overflow-hidden rounded-lg bg-muted">
-            {track?.artworkUrl ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img
-                src={track.artworkUrl}
-                alt=""
-                className="size-full object-cover"
-              />
-            ) : (
-              <div className="flex size-full items-center justify-center">
+            <div className="flex size-full items-center justify-center">
                 <Music2
                   className="size-4 text-muted-foreground/50"
                   aria-hidden
                 />
               </div>
-            )}
           </div>
 
           <div className="min-w-0 flex-1">

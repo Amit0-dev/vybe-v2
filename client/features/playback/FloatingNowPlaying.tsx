@@ -2,11 +2,11 @@
 
 import { Music2, Pause, Play, SkipForward } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import type { Track } from "@/lib/types";
+import type { ApiTrack } from "@/features/queue/types/queue.types";
 import { cn } from "@/lib/utils";
 
 interface FloatingNowPlayingProps {
-  track?: Track | null;
+  track?: ApiTrack | null;
   progressSec?: number;
   isPlaying?: boolean;
   onPlay?: () => void;
@@ -54,21 +54,12 @@ export function FloatingNowPlaying({
 
         <div className="flex items-center gap-3 px-3 py-2.5">
           <div className="relative size-11 shrink-0 overflow-hidden rounded-lg bg-muted">
-            {track?.artworkUrl ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img
-                src={track.artworkUrl}
-                alt=""
-                className="size-full object-cover"
-              />
-            ) : (
-              <div className="flex size-full items-center justify-center">
+            <div className="flex size-full items-center justify-center">
                 <Music2
                   className="size-4 text-muted-foreground/50"
                   aria-hidden
                 />
               </div>
-            )}
           </div>
 
           <div className="min-w-0 flex-1">

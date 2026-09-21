@@ -1,13 +1,13 @@
 "use client";
 
 import { Music2 } from "lucide-react";
-import type { Track } from "@/lib/types";
+import type { ApiTrack } from "@/features/queue/types/queue.types";
 import { ProgressBar } from "./ProgressBar";
 import { PlaybackPlayer } from "./PlaybackPlayer";
 import { cn } from "@/lib/utils";
 
 interface NowPlayingProps {
-  track?: Track | null;
+  track?: ApiTrack | null;
   progressSec?: number;
   isPlaying?: boolean;
   onPlay?: () => void;
@@ -68,18 +68,9 @@ export function NowPlaying({
         ) : (
           <>
             <div className="relative aspect-square w-full max-w-[200px] overflow-hidden rounded-lg border border-border/50 shadow-[0_20px_40px_-20px_oklch(0.58_0.2_28_/_0.45)]">
-              {track.artworkUrl ? (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img
-                  src={track.artworkUrl}
-                  alt={`Artwork for ${track.title}`}
-                  className="size-full object-cover"
-                />
-              ) : (
                 <div className="flex size-full items-center justify-center bg-gradient-to-br from-primary/20 via-card to-muted">
                   <Music2 className="size-10 text-primary/70" aria-hidden />
                 </div>
-              )}
             </div>
 
             <h2 className="font-heading mt-4 w-full text-center text-lg font-medium tracking-tight text-balance sm:text-xl">

@@ -4,6 +4,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { ThemeProvider } from "@/components/theme/ThemeProvider";
 import "./globals.css";
 import { QueryProvider } from "@/components/providers/QueryProvider";
+import { Toaster } from "sonner";
 
 const zenKaku = Zen_Kaku_Gothic_New({
     variable: "--font-display",
@@ -52,6 +53,7 @@ export default function RootLayout({
                 <ThemeProvider>
                     <QueryProvider>
                         <TooltipProvider>{children}</TooltipProvider>
+                        <Toaster position="top-right" richColors />
                     </QueryProvider>
                 </ThemeProvider>
             </body>

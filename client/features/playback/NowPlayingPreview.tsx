@@ -1,12 +1,12 @@
 "use client";
 
 import { Music2, PauseCircle } from "lucide-react";
-import type { Track } from "@/lib/types";
+import type { ApiTrack } from "@/features/queue/types/queue.types";
 import { formatDuration, cn } from "@/lib/utils";
 import { OwnerPresence } from "@/features/space/components/OwnerPresence";
 
 interface NowPlayingPreviewProps {
-  track?: Track | null;
+  track?: ApiTrack | null;
   progressSec?: number;
   isPlaying?: boolean;
   isOwnerOnline?: boolean;
@@ -45,21 +45,12 @@ export function NowPlayingPreview({
 
       <div className="flex items-center gap-4 p-4">
         <div className="relative size-14 shrink-0 overflow-hidden rounded-md bg-muted sm:size-16">
-          {track?.artworkUrl ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img
-              src={track.artworkUrl}
-              alt=""
-              className="size-full object-cover"
-            />
-          ) : (
-            <div className="flex size-full items-center justify-center">
+          <div className="flex size-full items-center justify-center">
               <Music2
                 className="size-5 text-muted-foreground/50"
                 aria-hidden
               />
             </div>
-          )}
           {track && isPlaying && isOwnerOnline && (
             <span className="absolute inset-x-0 bottom-0 h-0.5 bg-primary/80">
               <span
