@@ -31,6 +31,11 @@ export type ServerMessage =
           queueItemId: string;
       }
     | {
+          type: "QUEUE_ITEM_COMPLETED";
+          spaceId: string;
+          queueItemId: string;
+      }
+    | {
           type: "QUEUE_ITEM_PLAYING";
           spaceId: string;
           queueItemId: string;

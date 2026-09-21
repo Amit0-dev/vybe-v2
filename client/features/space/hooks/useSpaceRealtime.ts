@@ -56,6 +56,17 @@ export function useSpaceRealtime(spaceId: string) {
         });
     }, []);
 
+    const applyPlayback = useCallback((playback: ApiQueueItem | null) => {
+        setSnapshot((current) => {
+            if (!current) return current;
+
+            return {
+                ...current,
+                playback,
+            };
+        });
+    }, []);
+
     const handleMessage = useCallback(
         (event: MessageEvent) => {
             let message: ServerMessage;
@@ -125,14 +136,26 @@ export function useSpaceRealtime(spaceId: string) {
 
                         return {
                             ...current,
-                            queue: current.queue.map((item) =>
-                                item.id === queueItemId
-                                    ? {
-                                          ...item,
-                                          status: "SKIPPED",
-                                      }
-                                    : item,
-                            ),
+                            playback:
+                                current.playback?.id === queueItemId ? null : current.playback,
+                            queue: current.queue.filter((item) => item.id !== queueItemId),
+                        };
+                    });
+
+                    break;
+                }
+
+                case "QUEUE_ITEM_COMPLETED": {
+                    const { queueItemId } = message;
+
+                    setSnapshot((current) => {
+                        if (!current) return current;
+
+                        return {
+                            ...current,
+                            playback:
+                                current.playback?.id === queueItemId ? null : current.playback,
+                            queue: current.queue.filter((item) => item.id !== queueItemId),
                         };
                     });
 
@@ -145,8 +168,13 @@ export function useSpaceRealtime(spaceId: string) {
                     setSnapshot((current) => {
                         if (!current) return current;
 
+                        const playingItem = current.queue.find((item) => item.id === queueItemId);
+
                         return {
                             ...current,
+                            playback: playingItem
+                                ? { ...playingItem, status: "PLAYING" }
+                                : current.playback,
                             queue: current.queue.map((item) =>
                                 item.id === queueItemId
                                     ? {
@@ -168,7 +196,11 @@ export function useSpaceRealtime(spaceId: string) {
     useEffect(() => {
         if (!spaceId) return;
 
-        setStatus("connecting");
+        let cancelled = false;
+
+        queueMicrotask(() => {
+            if (!cancelled) setStatus("connecting");
+        });
 
         const client = createSpaceWsClient({
             spaceId,
@@ -194,9 +226,10 @@ export function useSpaceRealtime(spaceId: string) {
         });
 
         return () => {
+            cancelled = true;
             client.close();
         };
     }, [spaceId, handleMessage]);
 
-    return { status, snapshot, error, applyQueueItem, applyQueueScore };
+    return { status, snapshot, error, applyQueueItem, applyQueueScore, applyPlayback };
 }

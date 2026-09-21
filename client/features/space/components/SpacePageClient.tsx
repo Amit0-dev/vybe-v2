@@ -18,7 +18,13 @@ import { toast } from "sonner";
 
 export function SpacePageClient({ spaceId }: { spaceId: string }) {
     const { data: spaceData, isLoading: isSpaceLoading, error: spaceError } = useSpace(spaceId);
-    const { status, snapshot, error: realtimeError, applyQueueItem } = useSpaceRealtime(spaceId);
+    const {
+        status,
+        snapshot,
+        error: realtimeError,
+        applyQueueItem,
+        applyPlayback,
+    } = useSpaceRealtime(spaceId);
     const addYoutubeMutation = useAddYoutubeTrack(spaceId);
 
     const voteMutation = useVoteQueueItem(spaceId);
@@ -33,27 +39,31 @@ export function SpacePageClient({ spaceId }: { spaceId: string }) {
     const [isPlaying, setIsPlaying] = useState(false);
     const [progressSec, setProgressSec] = useState(0);
     const progressInterval = useRef<ReturnType<typeof setInterval> | null>(null);
+    const loadedPlaybackId = useRef<string | null>(null);
 
     const { isPending: isAddingTrack, error: addTrackError } = addYoutubeMutation;
 
-    const { isPending: isVoting, error: voteError } = voteMutation;
+    const { isPending: isVoting } = voteMutation;
 
-    const queueList = snapshot?.queue ?? [];
     const enrichedQueue = useMemo(
-        () =>
-            queueList.map((item) => ({
+        () => {
+            const queueList = snapshot?.queue ?? [];
+
+            return queueList.map((item) => ({
                 ...item,
                 userVote: userVoteMap.has(item.id)
                     ? userVoteMap.get(item.id) ?? null
                     : item.userVote ?? null,
-            })),
-        [queueList, userVoteMap],
+            }));
+        },
+        [snapshot?.queue, userVoteMap],
     );
     const memberCount = snapshot?.memberCount ?? 0;
     const currentPlayback = snapshot?.playback ?? null;
 
     const loadPlaybackItem = useCallback(
         async (queueItem: NonNullable<typeof currentPlayback>, autoPlay: boolean) => {
+            loadedPlaybackId.current = queueItem.id;
             setProgressSec(0);
             setAutoPlayCustomAudio(autoPlay);
 
@@ -73,7 +83,9 @@ export function SpacePageClient({ spaceId }: { spaceId: string }) {
     );
 
     useEffect(() => {
-        if (!spaceData?.isOwner || !currentPlayback) return;
+        if (!spaceData?.isOwner || !currentPlayback || loadedPlaybackId.current === currentPlayback.id) {
+            return;
+        }
 
         let cancelled = false;
 
@@ -88,7 +100,7 @@ export function SpacePageClient({ spaceId }: { spaceId: string }) {
         return () => {
             cancelled = true;
         };
-    }, [currentPlayback?.id, loadPlaybackItem, spaceData?.isOwner]);
+    }, [currentPlayback, loadPlaybackItem, spaceData?.isOwner]);
 
     useEffect(() => {
         if (!isPlaying) {
@@ -113,8 +125,11 @@ export function SpacePageClient({ spaceId }: { spaceId: string }) {
         }
 
         const response = await startPlaybackMutation.mutateAsync();
-        if (response.queueItem) await loadPlaybackItem(response.queueItem, true);
-    }, [currentPlayback, loadPlaybackItem, startPlaybackMutation]);
+        if (response.queueItem) {
+            applyPlayback(response.queueItem);
+            await loadPlaybackItem(response.queueItem, true);
+        }
+    }, [applyPlayback, currentPlayback, loadPlaybackItem, startPlaybackMutation]);
 
     const handlePause = useCallback(() => {
         if (currentPlayback?.track.source === "YOUTUBE") ytPlayerRef.current?.pause();
@@ -128,13 +143,16 @@ export function SpacePageClient({ spaceId }: { spaceId: string }) {
         const nextQueueItem = response.queueItem.nextQueueItem;
 
         if (!nextQueueItem) {
+            loadedPlaybackId.current = null;
+            applyPlayback(null);
             setIsPlaying(false);
             setProgressSec(0);
             return;
         }
 
+        applyPlayback(nextQueueItem);
         await loadPlaybackItem(nextQueueItem, true);
-    }, [completePlaybackMutation, currentPlayback, loadPlaybackItem]);
+    }, [applyPlayback, completePlaybackMutation, currentPlayback, loadPlaybackItem]);
 
     const handleSkip = useCallback(async () => {
         if (!currentPlayback) return;
@@ -143,6 +161,8 @@ export function SpacePageClient({ spaceId }: { spaceId: string }) {
         const nextQueueItem = response.queueItem.nextQueueItem;
 
         if (!nextQueueItem) {
+            loadedPlaybackId.current = null;
+            applyPlayback(null);
             ytPlayerRef.current?.stop();
             audioRef.current?.pause();
             setCustomAudioUrl(null);
@@ -151,8 +171,9 @@ export function SpacePageClient({ spaceId }: { spaceId: string }) {
             return;
         }
 
+        applyPlayback(nextQueueItem);
         await loadPlaybackItem(nextQueueItem, true);
-    }, [currentPlayback, loadPlaybackItem, skipPlaybackMutation]);
+    }, [applyPlayback, currentPlayback, loadPlaybackItem, skipPlaybackMutation]);
 
     const handleAddTrack = useCallback(
         async (payload: AddTrackPayload) => {
@@ -172,7 +193,7 @@ export function SpacePageClient({ spaceId }: { spaceId: string }) {
                 }
             }
         },
-        [addYoutubeMutation.mutateAsync, applyQueueItem],
+        [addYoutubeMutation, applyQueueItem],
     );
 
     const handleVote = useCallback(
@@ -197,7 +218,7 @@ export function SpacePageClient({ spaceId }: { spaceId: string }) {
                 toast.error(message);
             }
         },
-        [voteMutation.mutateAsync],
+        [voteMutation],
     );
 
     const addTrackErrorMessage =

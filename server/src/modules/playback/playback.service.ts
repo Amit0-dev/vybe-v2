@@ -83,6 +83,12 @@ export async function completePlayback(spaceId: string, queueItemId: string) {
 
     const updatedQueueItem = await transitionQueueItem(queueItem.id, QueueItemStatus.PLAYED);
 
+    broadcastToSpace(spaceId, {
+        type: RealtimeEvent.QUEUE_ITEM_COMPLETED,
+        spaceId,
+        queueItemId: queueItem.id,
+    });
+
     const nextQueueItem = await startNextTrack(spaceId);
 
     return {

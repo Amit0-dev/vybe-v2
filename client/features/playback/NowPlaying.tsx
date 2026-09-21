@@ -64,6 +64,15 @@ export function NowPlaying({
               Audio plays on your browser. Start a track when the queue looks
               good.
             </p>
+            <div className="mt-5">
+              <PlaybackPlayer
+                isOwner
+                isPlaying={isPlaying}
+                onPlay={onPlay}
+                onPause={onPause}
+                onSkip={onSkip}
+              />
+            </div>
           </>
         ) : (
           <>

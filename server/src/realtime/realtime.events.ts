@@ -4,6 +4,7 @@ export const RealtimeEvent = {
     QUEUE_ITEM_VOTE_UPDATED: "QUEUE_ITEM_VOTE_UPDATED",
     QUEUE_ITEM_ADDED: "QUEUE_ITEM_ADDED",
     QUEUE_ITEM_SKIPPED: "QUEUE_ITEM_SKIPPED",
+    QUEUE_ITEM_COMPLETED: "QUEUE_ITEM_COMPLETED",
     QUEUE_ITEM_PLAYING: "QUEUE_ITEM_PLAYING",
     SPACE_SNAPSHOT: "SPACE_SNAPSHOT",
 } as const;
@@ -23,6 +24,12 @@ export type QueueItemPlayingEvent = {
 
 export type QueueItemSkippedEvent = {
     type: typeof RealtimeEvent.QUEUE_ITEM_SKIPPED;
+    spaceId: string;
+    queueItemId: string;
+};
+
+export type QueueItemCompletedEvent = {
+    type: typeof RealtimeEvent.QUEUE_ITEM_COMPLETED;
     spaceId: string;
     queueItemId: string;
 };
