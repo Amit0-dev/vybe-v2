@@ -15,12 +15,12 @@ export type QueueItem = {
     trackId: string;
     score: number;
     status: QueueItemStatus;
-    createdAt: Date;
-    updatedAt: Date;
+    createdAt: string;
+    updatedAt: string;
     track: {
         id: string;
-        createdAt: Date;
-        updatedAt: Date;
+        createdAt: string;
+        updatedAt: string;
         title: string;
         artist: string | null;
         durationSec: number;
@@ -33,8 +33,8 @@ export type QueueItem = {
 export type PlaybackState = {
     track: {
         id: string;
-        createdAt: Date;
-        updatedAt: Date;
+        createdAt: string;
+        updatedAt: string;
         title: string;
         artist: string | null;
         durationSec: number;
@@ -43,8 +43,8 @@ export type PlaybackState = {
         storageKey: string | null;
     };
     id: string;
-    createdAt: Date;
-    updatedAt: Date;
+    createdAt: string;
+    updatedAt: string;
     score: number;
     spaceId: string;
     trackId: string;

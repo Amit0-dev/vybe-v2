@@ -10,7 +10,17 @@ import type {
 import { createSpaceWsClient } from "../realtime/space-ws.client";
 
 function sortQueue(queue: QueueItem[]): QueueItem[] {
-    return [...queue].sort((a, b) => b.score - a.score);
+    return [...queue].sort((a, b) => b.score - a.score || a.id.localeCompare(b.id));
+}
+
+function upsertQueueItem(queue: QueueItem[], incoming: QueueItem): QueueItem[] {
+    const exists = queue.some((item) => item.id === incoming.id);
+
+    const updatedQueue = exists
+        ? queue.map((item) => (item.id === incoming.id ? incoming : item))
+        : [...queue, incoming];
+
+    return sortQueue(updatedQueue);
 }
 
 export function useSpaceRealtime(spaceId: string) {
@@ -19,6 +29,32 @@ export function useSpaceRealtime(spaceId: string) {
     const [snapshot, setSnapshot] = useState<SpaceSnapshot | null>(null);
 
     const [error, setError] = useState<string | null>(null);
+
+    const applyQueueItem = useCallback((queueItem: QueueItem) => {
+        setSnapshot((current) => {
+            if (!current) return current;
+
+            return {
+                ...current,
+                queue: upsertQueueItem(current.queue, queueItem),
+            };
+        });
+    }, []);
+
+    const applyQueueScore = useCallback((queueItemId: string, score: number) => {
+        setSnapshot((current) => {
+            if (!current) return current;
+
+            return {
+                ...current,
+                queue: sortQueue(
+                    current.queue.map((item) =>
+                        item.id === queueItemId ? { ...item, score } : item,
+                    ),
+                ),
+            };
+        });
+    }, []);
 
     const handleMessage = useCallback(
         (event: MessageEvent) => {
@@ -43,54 +79,86 @@ export function useSpaceRealtime(spaceId: string) {
                 }
 
                 case "QUEUE_ITEM_ADDED": {
+                    const queueItem = message.queueItem;
+
                     setSnapshot((current) => {
                         if (!current) return current;
 
-                        const exists = current.queue.some(
-                            (item) => item.id === message.queueItem.id,
-                        );
-
-                        if (exists) return current;
-
                         return {
                             ...current,
-                            queue: [...current.queue, message.queueItem],
+                            queue: upsertQueueItem(current.queue, queueItem),
                         };
                     });
+
                     break;
                 }
 
                 case "QUEUE_ITEM_VOTE_UPDATED": {
+                    const { queueItemId, score } = message;
+
                     setSnapshot((current) => {
                         if (!current) return current;
 
-                        const queue = current.queue.map((item) =>
-                            item.id === message.queueItemId
-                                ? { ...item, score: message.score }
+                        const updatedQueue = current.queue.map((item) =>
+                            item.id === queueItemId
+                                ? {
+                                      ...item,
+                                      score: score,
+                                  }
                                 : item,
                         );
 
                         return {
                             ...current,
-                            queue: sortQueue(queue),
+                            queue: sortQueue(updatedQueue),
                         };
                     });
+
                     break;
                 }
 
                 case "QUEUE_ITEM_SKIPPED": {
+                    const { queueItemId } = message;
+
                     setSnapshot((current) => {
                         if (!current) return current;
 
                         return {
                             ...current,
-                            queue: current.queue.filter((item) => item.id !== message.queueItemId),
+                            queue: current.queue.map((item) =>
+                                item.id === queueItemId
+                                    ? {
+                                          ...item,
+                                          status: "SKIPPED",
+                                      }
+                                    : item,
+                            ),
                         };
                     });
+
                     break;
                 }
 
                 case "QUEUE_ITEM_PLAYING": {
+                    const { queueItemId } = message;
+
+                    setSnapshot((current) => {
+                        if (!current) return current;
+
+                        return {
+                            ...current,
+                            queue: current.queue.map((item) =>
+                                item.id === queueItemId
+                                    ? {
+                                          ...item,
+                                          status: "PLAYING",
+                                      }
+                                    : item,
+                            ),
+                        };
+                    });
+
+                    break;
                 }
             }
         },
@@ -130,5 +198,5 @@ export function useSpaceRealtime(spaceId: string) {
         };
     }, [spaceId, handleMessage]);
 
-    return { status, snapshot, error };
+    return { status, snapshot, error, applyQueueItem, applyQueueScore };
 }

@@ -5,6 +5,8 @@ import { SpaceRoom } from "@/features/space/components/SpaceRoom";
 import type { QueueItem } from "@/lib/types";
 import { useSpace } from "../hooks/useSpace";
 import { useSpaceRealtime } from "../hooks/useSpaceRealtime";
+import { useAddYoutubeTrack } from "../hooks/useAddYoutubeTrack";
+import type { AddTrackPayload } from "@/features/queue/AddTrackDialog";
 
 function applyVote(item: QueueItem, value: 1 | -1): QueueItem {
     const prev = item.userVote ?? null;
@@ -37,19 +39,38 @@ function sortByScore(items: QueueItem[]): QueueItem[] {
 
 export function SpacePageClient({ spaceId }: { spaceId: string }) {
     const { data: spaceData, isLoading: isSpaceLoading, error: spaceError } = useSpace(spaceId);
-    const { status, snapshot, error: realtimeError } = useSpaceRealtime(spaceId);
+    const { status, snapshot, error: realtimeError, applyQueueItem } = useSpaceRealtime(spaceId);
+    const addYoutubeMutation = useAddYoutubeTrack(spaceId);
+
+    const {
+        isPending: isAddingTrack,
+        error: addTrackError,
+    } = addYoutubeMutation;
 
     const queueList = snapshot?.queue ?? [];
     const memberCount = snapshot?.memberCount ?? 0;
     const currentPlayback = snapshot?.playback ?? null;
 
-    // const onVote = useCallback((queueItemId: string, value: 1 | -1) => {
-    //     setQueue((prev) =>
-    //         sortByScore(
-    //             prev.map((item) => (item.id === queueItemId ? applyVote(item, value) : item)),
-    //         ),
-    //     );
-    // }, []);
+    const handleAddTrack = useCallback(
+        async (payload: AddTrackPayload) => {
+            if (payload.source !== "youtube" || !payload.url) {
+                throw new Error("Unsupported track source");
+            }
+
+            const response = await addYoutubeMutation.mutateAsync(payload.url);
+
+            switch(response.action) {
+                case "CREATED": {
+                    applyQueueItem(response.queueItem);
+                    break;
+                }
+                case "VOTED_EXISTING": {
+                    break;
+                }
+            }
+        },
+        [addYoutubeMutation.mutateAsync, applyQueueItem],
+    );
 
     if (isSpaceLoading) {
         return <div>Loading...</div>;
@@ -67,7 +88,7 @@ export function SpacePageClient({ spaceId }: { spaceId: string }) {
         <SpaceRoom
             spaceName={spaceData.name}
             members={memberCount}
-            isOwner={undefined}
+            isOwner={spaceData.isOwner}
             isOwnerOnline={true}
             ownerName={"Test Owner"}
             spaceStatus={spaceData.status}
@@ -75,7 +96,8 @@ export function SpacePageClient({ spaceId }: { spaceId: string }) {
             queue={queueList}
             libraryTracks={[]}
             connectionStatus={status}
-            // onVote={onVote}
+            onAddTrack={handleAddTrack}
+            isAddingTrack={isAddingTrack}
         />
     );
 }

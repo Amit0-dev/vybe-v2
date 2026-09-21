@@ -34,7 +34,8 @@ interface SpaceRoomProps {
   progressSec?: number;
   isPlaying?: boolean;
   connectionStatus: SpaceConnectionStatus;
-  onAddTrack?: (payload: AddTrackPayload) => void;
+  isAddingTrack?: boolean;
+  onAddTrack?: (payload: AddTrackPayload) => void | Promise<void>;
   onVote?: (queueItemId: string, value: 1 | -1) => void;
   onPlay?: () => void;
   onPause?: () => void;
@@ -55,6 +56,7 @@ export function SpaceRoom({
   progressSec = 0,
   isPlaying = false,
   connectionStatus,
+  isAddingTrack,
   onAddTrack,
   onVote,
   onPlay,
@@ -103,6 +105,7 @@ export function SpaceRoom({
             )}
             <AddTrackDialog
               onAdd={onAddTrack}
+              isLoading={isAddingTrack}
               libraryTracks={libraryTracks}
               libraryLoading={libraryLoading}
             />

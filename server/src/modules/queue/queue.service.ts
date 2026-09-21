@@ -28,10 +28,13 @@ export async function addTrackToQueue(spaceId: string, trackId: string, userId: 
     const existingQueueItem = await findActiveQueueItem(spaceId, trackId);
 
     if (existingQueueItem) {
-        await voteOnQueueItem(spaceId, existingQueueItem.id, userId, 1);
+        const voteResult = await voteOnQueueItem(spaceId, existingQueueItem.id, userId, 1);
 
         return {
-            queueItem: existingQueueItem,
+            queueItem: {
+                ...existingQueueItem,
+                score: voteResult.score ?? existingQueueItem.score,
+            },
             action: "VOTED_EXISTING" as const,
         };
     }
@@ -67,7 +70,7 @@ export async function addTrackToQueue(spaceId: string, trackId: string, userId: 
         broadcastToSpace(spaceId, {
             type: RealtimeEvent.QUEUE_ITEM_ADDED,
             spaceId,
-            queueItem
+            queueItem,
         });
 
         return {
@@ -79,10 +82,13 @@ export async function addTrackToQueue(spaceId: string, trackId: string, userId: 
             const existingQueueItem = await findActiveQueueItem(spaceId, trackId);
 
             if (existingQueueItem) {
-                await voteOnQueueItem(spaceId, existingQueueItem.id, userId, 1);
+                const voteResult = await voteOnQueueItem(spaceId, existingQueueItem.id, userId, 1);
 
                 return {
-                    queueItem: existingQueueItem,
+                    queueItem: {
+                        ...existingQueueItem,
+                        score: voteResult.score ?? existingQueueItem.score,
+                    },
                     action: "VOTED_EXISTING" as const,
                 };
             }

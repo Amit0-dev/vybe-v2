@@ -7,7 +7,7 @@ export interface SpacePreview {
     joinCode: string;
     status: SpaceStatus;
     role: SpaceMemberRole;
-    owner: String;
+    ownerId: string;
     createdAt: string;
     updatedAt: string;
     isOwner: boolean;
