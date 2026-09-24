@@ -2,8 +2,8 @@ import { Prisma } from "../../generated/prisma/client.js";
 import { QueueItemStatus } from "../../generated/prisma/enums.js";
 import { logger } from "../../infra/logger.js";
 import { ConflictError, NotFoundError } from "../../lib/errors.js";
+import { publishRealtimeEvent } from "../../realtime/publishRealtimeEvent.js";
 import { RealtimeEvent } from "../../realtime/realtime.events.js";
-import { broadcastToSpace } from "../../realtime/realtime.manager.js";
 import { findTrackById } from "../track/track.repository.js";
 import { createYouTubeTrack } from "../track/track.service.js";
 import { voteOnQueueItem } from "../vote/vote.service.js";
@@ -68,7 +68,7 @@ export async function addTrackToQueue(spaceId: string, trackId: string, userId: 
             }
         }
 
-        broadcastToSpace(spaceId, {
+        await publishRealtimeEvent({
             type: RealtimeEvent.QUEUE_ITEM_ADDED,
             spaceId,
             queueItem,
@@ -114,9 +114,7 @@ export async function getQueue(spaceId: string, userId: string) {
     ]);
 
     const queueItemMap = new Map(queueItems.map((item) => [item.id, item]));
-    const userVoteMap = new Map(
-        userVotes.map((vote) => [vote.queueItemId, vote.value as 1 | -1]),
-    );
+    const userVoteMap = new Map(userVotes.map((vote) => [vote.queueItemId, vote.value as 1 | -1]));
 
     return ranking
         .map((rankingItem) => {
@@ -211,7 +209,7 @@ export async function skipQueueItem(spaceId: string, queueItemId: string) {
 
     const updatedQueueItem = await transitionQueueItem(queueItem.id, QueueItemStatus.SKIPPED);
 
-    broadcastToSpace(spaceId, {
+    await publishRealtimeEvent({
         type: RealtimeEvent.QUEUE_ITEM_SKIPPED,
         spaceId,
         queueItemId,

@@ -4,6 +4,7 @@ import { logger } from "./infra/logger.js";
 import { connectInfra, disconnectInfra } from "./infra/index.js";
 import type { Server } from "node:http";
 import { closeRealtime, initializeRealtime } from "./realtime/realtime.server.js";
+import { subscribeToRealtimeEvents } from "./realtime/realtime.pubsub.js";
 
 const app = createApp();
 
@@ -11,6 +12,7 @@ let server: Server | undefined;
 
 try {
     await connectInfra();
+    await subscribeToRealtimeEvents();
 
     server = app.listen(env.PORT, () => {
         logger.info(`Server running on port ${env.PORT}`);

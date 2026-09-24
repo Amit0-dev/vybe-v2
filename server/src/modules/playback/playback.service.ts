@@ -1,8 +1,8 @@
 import { Prisma, QueueItemStatus, SpaceStatus } from "../../generated/prisma/client.js";
 import { generatePlaybackUrl } from "../../integrations/storage/cloudfront.client.js";
 import { BadRequestError, NotFoundError } from "../../lib/errors.js";
+import { publishRealtimeEvent } from "../../realtime/publishRealtimeEvent.js";
 import { RealtimeEvent } from "../../realtime/realtime.events.js";
-import { broadcastToSpace } from "../../realtime/realtime.manager.js";
 import { getPlaybackCandidates } from "../queue/queue.ranking.js";
 import {
     claimQueueItem,
@@ -44,7 +44,7 @@ export async function startNextTrack(spaceId: string) {
                 throw new Error("Queue item disappeared after being claimed");
             }
 
-            broadcastToSpace(spaceId, {
+            await publishRealtimeEvent({
                 type: RealtimeEvent.QUEUE_ITEM_PLAYING,
                 spaceId,
                 queueItemId: queueItem.id,
@@ -83,7 +83,7 @@ export async function completePlayback(spaceId: string, queueItemId: string) {
 
     const updatedQueueItem = await transitionQueueItem(queueItem.id, QueueItemStatus.PLAYED);
 
-    broadcastToSpace(spaceId, {
+    await publishRealtimeEvent({
         type: RealtimeEvent.QUEUE_ITEM_COMPLETED,
         spaceId,
         queueItemId: queueItem.id,

@@ -1,4 +1,4 @@
-import { QueueItemStatus } from "../generated/prisma/enums.js";
+import { QueueItemStatus, TrackSource } from "../generated/prisma/enums.js";
 
 export const RealtimeEvent = {
     QUEUE_ITEM_VOTE_UPDATED: "QUEUE_ITEM_VOTE_UPDATED",
@@ -38,9 +38,30 @@ export type QueueItemAddedEvent = {
     type: typeof RealtimeEvent.QUEUE_ITEM_ADDED;
     spaceId: string;
     queueItem: {
+        spaceId: string;
+        score: number;
         id: string;
         trackId: string;
-        score: number;
         status: QueueItemStatus;
+        createdAt: Date;
+        updatedAt: Date;
+        track: {
+            id: string;
+            storageKey: string | null;
+            title: string;
+            artist: string | null;
+            durationSec: number;
+            source: TrackSource;
+            sourceId: string | null;
+            createdAt: Date;
+            updatedAt: Date;
+        };
     };
 };
+
+export type RealTimeEventPayload =
+    | QueueItemVoteUpdatedEvent
+    | QueueItemPlayingEvent
+    | QueueItemSkippedEvent
+    | QueueItemCompletedEvent
+    | QueueItemAddedEvent;

@@ -2,8 +2,8 @@ import { Prisma } from "../../generated/prisma/client.js";
 import prisma from "../../infra/db.js";
 import { logger } from "../../infra/logger.js";
 import { NotFoundError, TooManyRequestsError } from "../../lib/errors.js";
+import { publishRealtimeEvent } from "../../realtime/publishRealtimeEvent.js";
 import { RealtimeEvent } from "../../realtime/realtime.events.js";
-import { broadcastToSpace } from "../../realtime/realtime.manager.js";
 import { incrementQueueItemScore } from "../queue/queue.ranking.js";
 import { findQueueItemInSpace, markSpaceForReconciliation } from "../queue/queue.repository.js";
 import { acquireVoteCooldown } from "./vote.cooldown.js";
@@ -90,7 +90,7 @@ export async function voteOnQueueItem(
         try {
             score = await incrementQueueItemScore(spaceId, queueItemId, result.delta);
 
-            broadcastToSpace(spaceId, {
+            await publishRealtimeEvent({
                 type: RealtimeEvent.QUEUE_ITEM_VOTE_UPDATED,
                 spaceId,
                 queueItemId,
