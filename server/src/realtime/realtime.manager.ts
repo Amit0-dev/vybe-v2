@@ -48,21 +48,34 @@ export function broadcastToSpace(spaceId: string, event: unknown) {
     }
 }
 
-export function isUserConnectedToSpace(
-    spaceId: string,
-    userId: string
-) {
+export function isUserConnectedToSpace(spaceId: string, userId: string) {
     const connections = spaceConnections.get(spaceId);
 
-    if(!connections) {
-        return false
+    if (!connections) {
+        return false;
     }
 
-    for(const socket of connections) {
-        if(socket.userId === userId) {
-            return true
+    for (const socket of connections) {
+        if (socket.userId === userId) {
+            return true;
         }
     }
 
     return false;
+}
+
+export function getActiveUsersCountInSpace(spaceId: string) {
+    const connections = spaceConnections.get(spaceId);
+
+    if (!connections) {
+        return 0;
+    }
+
+    const uniqueUserIds = new Set<string>();
+
+    for (const socket of connections) {
+        uniqueUserIds.add(socket.userId);
+    }
+
+    return uniqueUserIds.size;
 }

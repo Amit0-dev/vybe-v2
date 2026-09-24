@@ -34,8 +34,11 @@ export interface ApiVoteResponse {
 }
 
 export interface LibraryTrack {
-    id: string;
-    title: string;
-    artist?: string | null;
-    durationSec?: number;
+    tracks: ApiTrack[];
+    pagination: {
+        page: number;
+        limit: number;
+        hasNextPage: boolean;
+        hasPreviousPage: boolean;
+    }
 }

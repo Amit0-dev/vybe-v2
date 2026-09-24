@@ -27,8 +27,15 @@ interface SpaceRoomProps {
     spaceStatus?: SpaceStatus;
     track: ApiPlaybackState | null;
     queue?: ApiQueueItem[];
-    libraryTracks?: LibraryTrack[];
+    libraryTracks?: LibraryTrack;
     libraryLoading?: boolean;
+    libraryError?: string | null;
+    librarySearch?: string;
+    onLibrarySearch?: (query: string) => void;
+    onPreviousLibraryPage?: () => void;
+    onNextLibraryPage?: () => void;
+    canGoToPreviousLibraryPage?: boolean;
+    canGoToNextLibraryPage?: boolean;
     progressSec?: number;
     isPlaying?: boolean;
     connectionStatus: SpaceConnectionStatus;
@@ -57,8 +64,15 @@ export function SpaceRoom({
     spaceStatus = "ACTIVE",
     track = null,
     queue = [],
-    libraryTracks = [],
+    libraryTracks,
     libraryLoading = false,
+    libraryError,
+    librarySearch = "",
+    onLibrarySearch,
+    onPreviousLibraryPage,
+    onNextLibraryPage,
+    canGoToPreviousLibraryPage = false,
+    canGoToNextLibraryPage = false,
     progressSec = 0,
     isPlaying = false,
     connectionStatus,
@@ -123,6 +137,13 @@ export function SpaceRoom({
                             onAddTrackError={addTrackError}
                             libraryTracks={libraryTracks}
                             libraryLoading={libraryLoading}
+                            libraryError={libraryError}
+                            librarySearch={librarySearch}
+                            onLibrarySearch={onLibrarySearch}
+                            onPreviousLibraryPage={onPreviousLibraryPage}
+                            onNextLibraryPage={onNextLibraryPage}
+                            canGoToPreviousLibraryPage={canGoToPreviousLibraryPage}
+                            canGoToNextLibraryPage={canGoToNextLibraryPage}
                         />
                     </div>
                 }

@@ -13,7 +13,7 @@ import {
     DialogTitle,
 } from "@/components/ui/dialog";
 import { CustomTrackPicker } from "@/features/queue/CustomTrackPicker";
-import type { LibraryTrack } from "@/features/queue/types/queue.types";
+import type { ApiTrack, LibraryTrack } from "@/features/queue/types/queue.types";
 import { cn } from "@/lib/utils";
 
 export type TrackSource = "youtube" | "custom";
@@ -30,8 +30,15 @@ export interface AddTrackPayload {
 interface AddTrackDialogProps {
     onAdd?: (payload: AddTrackPayload) => void | Promise<void>;
     /** Tracks from your data storage — shown in the custom picker */
-    libraryTracks?: LibraryTrack[];
+    libraryTracks?: LibraryTrack;
     libraryLoading?: boolean;
+    libraryError?: string | null;
+    librarySearch?: string;
+    onLibrarySearch?: (query: string) => void;
+    onPreviousLibraryPage?: () => void;
+    onNextLibraryPage?: () => void;
+    canGoToPreviousLibraryPage?: boolean;
+    canGoToNextLibraryPage?: boolean;
     isLoading?: boolean;
     triggerClassName?: string;
     onAddTrackError?: string | null;
@@ -41,8 +48,15 @@ type Step = "choose" | "youtube" | "custom";
 
 export function AddTrackDialog({
     onAdd,
-    libraryTracks = [],
+    libraryTracks,
     libraryLoading = false,
+    libraryError,
+    librarySearch = "",
+    onLibrarySearch,
+    onPreviousLibraryPage,
+    onNextLibraryPage,
+    canGoToPreviousLibraryPage = false,
+    canGoToNextLibraryPage = false,
     isLoading = false,
     triggerClassName,
     onAddTrackError,
@@ -50,8 +64,9 @@ export function AddTrackDialog({
     const [open, setOpen] = useState(false);
     const [step, setStep] = useState<Step>("choose");
     const [url, setUrl] = useState("");
-    const [selected, setSelected] = useState<LibraryTrack | null>(null);
+    const [selected, setSelected] = useState<ApiTrack | null>(null);
     const [submitError, setSubmitError] = useState<string | null>(null);
+    const [librarySearchResetKey, setLibrarySearchResetKey] = useState(0);
 
     function reset() {
         setStep("choose");
@@ -64,7 +79,11 @@ export function AddTrackDialog({
         if (isLoading) return;
 
         setOpen(next);
-        if (!next) reset();
+        if (!next) {
+            onLibrarySearch?.("");
+            setLibrarySearchResetKey((currentKey) => currentKey + 1);
+            reset();
+        }
     }
 
     async function submitYoutube(e: React.FormEvent) {
@@ -151,8 +170,7 @@ export function AddTrackDialog({
 
                                 <button
                                     type="button"
-                                    disabled
-                                    // onClick={() => setStep("custom")}
+                                    onClick={() => setStep("custom")}
                                     className="flex items-start gap-4 rounded-lg border border-border bg-card/50 p-4 text-left transition-colors hover:border-primary/40 hover:bg-vybe-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                                 >
                                     <span className="flex size-10 shrink-0 items-center justify-center rounded-md bg-primary/15 text-primary">
@@ -230,10 +248,18 @@ export function AddTrackDialog({
 
                             <div className="min-h-0 flex-1 overflow-y-auto px-4 py-5 scrollbar-hide sm:px-6">
                                 <CustomTrackPicker
+                                    key={librarySearchResetKey}
                                     tracks={libraryTracks}
                                     selectedId={selected?.id ?? null}
                                     onSelect={setSelected}
                                     isLoading={libraryLoading}
+                                    error={libraryError}
+                                    query={librarySearch}
+                                    onSearch={onLibrarySearch}
+                                    onPreviousPage={onPreviousLibraryPage}
+                                    onNextPage={onNextLibraryPage}
+                                    canGoPrevious={canGoToPreviousLibraryPage}
+                                    canGoNext={canGoToNextLibraryPage}
                                 />
                             </div>
 

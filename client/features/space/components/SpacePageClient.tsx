@@ -15,6 +15,7 @@ import type { AddTrackPayload } from "@/features/queue/AddTrackDialog";
 import { useVoteQueueItem } from "@/features/queue/hooks/useVoteQueueItem";
 import { ApiError } from "@/lib/api-client";
 import { toast } from "sonner";
+import { useCustomTrack } from "../hooks/useCustomTrack";
 
 export function SpacePageClient({ spaceId }: { spaceId: string }) {
     const { data: spaceData, isLoading: isSpaceLoading, error: spaceError } = useSpace(spaceId);
@@ -45,19 +46,41 @@ export function SpacePageClient({ spaceId }: { spaceId: string }) {
 
     const { isPending: isVoting } = voteMutation;
 
-    const enrichedQueue = useMemo(
-        () => {
-            const queueList = snapshot?.queue ?? [];
+    // Custom tracks (pagination and search)
+    const [page, setPage] = useState<number>(1);
+    const limit = 20;
+    const [search, setSearch] = useState<string>("");
+    const {
+        data: customTracks,
+        isLoading: isCustomTracksLoading,
+        error: customTracksError,
+    } = useCustomTrack(search, page, limit);
 
-            return queueList.map((item) => ({
-                ...item,
-                userVote: userVoteMap.has(item.id)
-                    ? userVoteMap.get(item.id) ?? null
-                    : item.userVote ?? null,
-            }));
-        },
-        [snapshot?.queue, userVoteMap],
-    );
+    const handleCustomTrackSearch = useCallback((query: string) => {
+        setSearch(query);
+        setPage(1);
+    }, []);
+
+    const handlePreviousCustomTrackPage = useCallback(() => {
+        setPage((currentPage) => Math.max(1, currentPage - 1));
+    }, []);
+
+    const handleNextCustomTrackPage = useCallback(() => {
+        if (customTracks?.pagination.hasNextPage) {
+            setPage((currentPage) => currentPage + 1);
+        }
+    }, [customTracks?.pagination.hasNextPage]);
+
+    const enrichedQueue = useMemo(() => {
+        const queueList = snapshot?.queue ?? [];
+
+        return queueList.map((item) => ({
+            ...item,
+            userVote: userVoteMap.has(item.id)
+                ? (userVoteMap.get(item.id) ?? null)
+                : (item.userVote ?? null),
+        }));
+    }, [snapshot?.queue, userVoteMap]);
     const memberCount = snapshot?.memberCount ?? 0;
     const currentPlayback = snapshot?.playback ?? null;
 
@@ -83,7 +106,11 @@ export function SpacePageClient({ spaceId }: { spaceId: string }) {
     );
 
     useEffect(() => {
-        if (!spaceData?.isOwner || !currentPlayback || loadedPlaybackId.current === currentPlayback.id) {
+        if (
+            !spaceData?.isOwner ||
+            !currentPlayback ||
+            loadedPlaybackId.current === currentPlayback.id
+        ) {
             return;
         }
 
@@ -234,10 +261,17 @@ export function SpacePageClient({ spaceId }: { spaceId: string }) {
               ? "Unable to add track. Please try again"
               : null;
 
+    const libraryErrorMessage =
+        customTracksError instanceof ApiError
+            ? customTracksError.message
+            : customTracksError
+              ? "Unable to load library tracks."
+              : null;
+
     const errorMessage =
         spaceError instanceof ApiError
             ? spaceError.message
-            : realtimeError ?? "Unable to connect to this Space.";
+            : (realtimeError ?? "Unable to connect to this Space.");
 
     if (isSpaceLoading) {
         return (
@@ -254,7 +288,9 @@ export function SpacePageClient({ spaceId }: { spaceId: string }) {
         return (
             <div className="vybe-stage flex h-dvh items-center justify-center px-4">
                 <div className="w-full max-w-sm rounded-xl border border-destructive/30 bg-card p-8 text-center">
-                    <h2 className="font-heading text-lg font-medium">Couldn&apos;t load this Space</h2>
+                    <h2 className="font-heading text-lg font-medium">
+                        Couldn&apos;t load this Space
+                    </h2>
                     <p className="mt-2 text-sm text-muted-foreground">{errorMessage}</p>
                     <Link
                         href="/spaces"
@@ -304,7 +340,15 @@ export function SpacePageClient({ spaceId }: { spaceId: string }) {
             onTrackEnded={handleTrackEnded}
             onIsPlayingChange={setIsPlaying}
             queue={enrichedQueue}
-            libraryTracks={[]}
+            libraryTracks={customTracks}
+            libraryLoading={isCustomTracksLoading}
+            libraryError={libraryErrorMessage}
+            librarySearch={search}
+            onLibrarySearch={handleCustomTrackSearch}
+            onPreviousLibraryPage={handlePreviousCustomTrackPage}
+            onNextLibraryPage={handleNextCustomTrackPage}
+            canGoToPreviousLibraryPage={customTracks?.pagination.hasPreviousPage ?? false}
+            canGoToNextLibraryPage={customTracks?.pagination.hasNextPage ?? false}
             connectionStatus={status}
             onAddTrack={handleAddTrack}
             isAddingTrack={isAddingTrack}
