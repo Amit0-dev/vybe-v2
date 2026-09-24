@@ -12,13 +12,16 @@ import {
 } from "../modules/playback/playback.service.js";
 import { getSpaceRealtimeSnapshot } from "../modules/space/space-realtime.service.js";
 import { RealtimeEvent } from "./realtime.events.js";
+import { refreshConnection, registerConnection, unregisterConnection } from "./presence.service.js";
 
 export interface RealtimeSocket extends WebSocket {
     userId: string;
     spaceId: string;
+    isAlive: boolean;
 }
 
 let wss: WebSocketServer;
+let heartbeatInterval: NodeJS.Timeout | null = null;
 let isRealtimeShuttingDown = false;
 
 export function initializeRealtime(server: Server) {
@@ -27,6 +30,20 @@ export function initializeRealtime(server: Server) {
     wss = new WebSocketServer({
         server,
     });
+
+    heartbeatInterval = setInterval(() => {
+        for (const socket of wss.clients) {
+            const realtimeSocket = socket as RealtimeSocket;
+
+            if (realtimeSocket.isAlive === false) {
+                socket.terminate();
+                continue;
+            }
+
+            realtimeSocket.isAlive = false;
+            socket.ping();
+        }
+    }, 30_000);
 
     wss.on("connection", async (socket, request) => {
         try {
@@ -66,9 +83,48 @@ export function initializeRealtime(server: Server) {
 
             realtimeSocket.userId = user.id;
             realtimeSocket.spaceId = spaceId;
+            realtimeSocket.isAlive = true;
 
             // add to Space connections
             addConnection(spaceId, realtimeSocket);
+
+            let presenceConnectionId: string;
+
+            try {
+                presenceConnectionId = await registerConnection(spaceId, user.id);
+            } catch (error) {
+                removeConnection(spaceId, realtimeSocket);
+
+                logger.error(
+                    {
+                        err: error,
+                        userId: user.id,
+                        spaceId,
+                    },
+                    "Failed to register realtime presence",
+                );
+
+                socket.close(1011, "Realtime service unavailable");
+                return;
+            }
+
+            socket.on("pong", async () => {
+                realtimeSocket.isAlive = true;
+
+                try {
+                    await refreshConnection(spaceId, presenceConnectionId, user.id);
+                } catch (error) {
+                    logger.error(
+                        {
+                            err: error,
+                            userId: user.id,
+                            spaceId,
+                        },
+                        "Failed to refresh realtime presence",
+                    );
+                }
+            });
+
             const snapshot = await getSpaceRealtimeSnapshot(spaceId, user.id);
 
             if (socket.readyState === WebSocket.OPEN) {
@@ -99,10 +155,31 @@ export function initializeRealtime(server: Server) {
             socket.on("close", async () => {
                 removeConnection(spaceId, realtimeSocket);
 
-                const stillConnected = isUserConnectedToSpace(spaceId, user.id);
+                let becameOffline = false;
+
+                try {
+                    becameOffline = await unregisterConnection(
+                        spaceId,
+                        presenceConnectionId,
+                        user.id,
+                    );
+                } catch (error) {
+                    logger.error(
+                        {
+                            err: error,
+                            userId: user.id,
+                            spaceId,
+                        },
+                        "Failed to unregister realtime presence",
+                    );
+                }
 
                 logger.info(
-                    { userId: user.id, spaceId, stillConnected },
+                    {
+                        userId: user.id,
+                        spaceId,
+                        becameOffline,
+                    },
                     "WebSocket client disconnected",
                 );
 
@@ -110,7 +187,7 @@ export function initializeRealtime(server: Server) {
                     return;
                 }
 
-                if (!stillConnected) {
+                if (becameOffline) {
                     try {
                         await handleUserDisconnected(spaceId, user.id);
                     } catch (error) {
@@ -141,6 +218,11 @@ export function initializeRealtime(server: Server) {
 
 export async function closeRealtime() {
     isRealtimeShuttingDown = true;
+
+    if (heartbeatInterval) {
+        clearInterval(heartbeatInterval);
+        heartbeatInterval = null;
+    }
 
     if (!wss) {
         return;

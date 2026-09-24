@@ -16,3 +16,13 @@ export async function disconnectInfra() {
 
     await prisma.$disconnect();
 }
+
+export async function connectWorkerInfra() {
+    await prisma.$connect();
+    await redis.connect();
+}
+
+export async function disconnectWorkerInfra() {
+    await redis.quit();
+    await prisma.$disconnect();
+}

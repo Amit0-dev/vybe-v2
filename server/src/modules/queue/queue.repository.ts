@@ -271,3 +271,15 @@ export async function clearSpaceReconciliation(spaceId: string) {
         },
     });
 }
+
+export async function findActiveSpaces() {
+    return prisma.space.findMany({
+        where: {
+            status: "ACTIVE",
+        },
+        select: {
+            id: true,
+            ownerId: true,
+        },
+    });
+}

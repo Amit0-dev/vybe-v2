@@ -1,22 +1,19 @@
 import { connectWorkerInfra, disconnectWorkerInfra } from "./infra/index.js";
 import { logger } from "./infra/logger.js";
-import {
-    startQueueReconciliationWorker,
-    stopQueueReconciliationWorker,
-} from "./workers/queue-reconciliation.worker.js";
+import { startPresenceWorker, stopPresenceWorker } from "./workers/presence.worker.js";
 
 let shuttingDown = false;
 
 async function startWorker() {
     await connectWorkerInfra();
 
-    logger.info("Queue reconciliation worker started");
+    logger.info("Presence worker started");
 
-    await startQueueReconciliationWorker();
+    await startPresenceWorker();
 
     await disconnectWorkerInfra();
 
-    logger.info("Queue reconciliation worker stopped");
+    logger.info("Presence worker stopped");
 }
 
 async function shutdown(signal: string) {
@@ -26,9 +23,9 @@ async function shutdown(signal: string) {
 
     shuttingDown = true;
 
-    logger.info(`${signal} received. Shutting down worker...`);
+    logger.info(`${signal} received. Shutting down presence worker...`);
 
-    stopQueueReconciliationWorker();
+    stopPresenceWorker();
 }
 
 process.on("SIGTERM", () => {
@@ -44,9 +41,9 @@ startWorker().catch(async (error) => {
         {
             err: error,
         },
-        "Queue reconciliation worker crashed",
+        "Presence worker crashed",
     );
-    
+
     await disconnectWorkerInfra();
     process.exit(1);
 });
