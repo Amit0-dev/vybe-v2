@@ -2,6 +2,7 @@
 
 import { SpaceHeader } from "./SpaceHeader";
 import { OwnerPresence } from "./OwnerPresence";
+import { OwnerOfflineBanner } from "./OwnerOfflineBanner";
 import { NowPlaying } from "@/features/playback/NowPlaying";
 import { FloatingNowPlaying } from "@/features/playback/FloatingNowPlaying";
 import { NowPlayingPreview } from "@/features/playback/NowPlayingPreview";
@@ -21,6 +22,7 @@ import type { RefObject } from "react";
 interface SpaceRoomProps {
     spaceName?: string;
     members?: number;
+    liveUserCount?: number;
     isOwner?: boolean;
     isOwnerOnline?: boolean;
     ownerName?: string;
@@ -58,6 +60,7 @@ interface SpaceRoomProps {
 export function SpaceRoom({
     spaceName = "Space",
     members = 0,
+    liveUserCount = 0,
     isOwner = false,
     isOwnerOnline = true,
     ownerName = "Host",
@@ -97,6 +100,7 @@ export function SpaceRoom({
                 <SpaceHeader
                     spaceName={spaceName}
                     members={members}
+                    liveUserCount={liveUserCount}
                     connectionStatus={connectionStatus}
                     isOwner={isOwner}
                 />
@@ -116,10 +120,11 @@ export function SpaceRoom({
     }
 
     return (
-        <div className="vybe-stage vybe-washi flex h-dvh max-h-dvh flex-1 flex-col overflow-hidden">
+        <div className="vybe-stage vybe-washi relative flex h-dvh max-h-dvh flex-1 flex-col overflow-hidden">
             <SpaceHeader
                 spaceName={spaceName}
                 members={members}
+                liveUserCount={liveUserCount}
                 connectionStatus={connectionStatus}
                 isOwner={isOwner}
                 actions={
@@ -148,6 +153,7 @@ export function SpaceRoom({
                     </div>
                 }
             />
+            {!isOwnerOnline && <OwnerOfflineBanner />}
 
             <main className="scrollbar-hide flex min-h-0 flex-1 flex-col overflow-hidden py-6 sm:py-8">
                 <Container className="flex min-h-0 flex-1 flex-col overflow-hidden">

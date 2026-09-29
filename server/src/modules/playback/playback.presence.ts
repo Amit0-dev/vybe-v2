@@ -13,12 +13,18 @@ export async function markOwnerOffline(spaceId: string) {
 
     if (result === "OK") {
         await redis.sAdd(OWNER_OFFLINE_SET, spaceId);
+        return true;
     }
+
+    return false;
 }
 
 export async function clearOwnerOffline(spaceId: string) {
-    await redis.del(getOwnerOfflineKey(spaceId));
+    const deleted = await redis.del(getOwnerOfflineKey(spaceId));
+
     await redis.sRem(OWNER_OFFLINE_SET, spaceId);
+
+    return deleted === 1;
 }
 
 export async function getOwnerOfflineAt(spaceId: string) {

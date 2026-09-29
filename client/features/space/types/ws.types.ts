@@ -11,6 +11,7 @@ export type SpaceConnectionStatus =
 export interface SpaceSnapshot {
     queue: ApiQueueItem[];
     memberCount: number;
+    liveUserCount: number;
     playback: ApiPlaybackState | null;
 }
 
@@ -45,4 +46,17 @@ export type ServerMessage =
           spaceId: string;
           queueItemId: string;
           score: number;
+        }
+        | {
+            type: "OWNER_OFFLINE";
+            spaceId: string;
+        }
+        | {
+            type: "OWNER_ONLINE";
+            spaceId: string;
+        }
+        | {
+            type: "SPACE_CLOSED";
+            spaceId: string;
+            reason: "OWNER_OFFLINE";
       };

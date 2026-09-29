@@ -29,6 +29,8 @@ export function useSpaceRealtime(spaceId: string) {
     const [snapshot, setSnapshot] = useState<SpaceSnapshot | null>(null);
 
     const [error, setError] = useState<string | null>(null);
+    const [isOwnerOnline, setIsOwnerOnline] = useState(true);
+    const [isSpaceClosed, setIsSpaceClosed] = useState(false);
 
     const applyQueueItem = useCallback((queueItem: ApiQueueItem) => {
         setSnapshot((current) => {
@@ -188,6 +190,22 @@ export function useSpaceRealtime(spaceId: string) {
 
                     break;
                 }
+
+                case "OWNER_OFFLINE": {
+                    setIsOwnerOnline(false);
+                    break;
+                }
+
+                case "OWNER_ONLINE": {
+                    setIsOwnerOnline(true);
+                    break;
+                }
+
+                case "SPACE_CLOSED": {
+                    setIsOwnerOnline(false);
+                    setIsSpaceClosed(true);
+                    break;
+                }
             }
         },
         [spaceId],
@@ -231,5 +249,14 @@ export function useSpaceRealtime(spaceId: string) {
         };
     }, [spaceId, handleMessage]);
 
-    return { status, snapshot, error, applyQueueItem, applyQueueScore, applyPlayback };
+    return {
+        status,
+        snapshot,
+        error,
+        isOwnerOnline,
+        isSpaceClosed,
+        applyQueueItem,
+        applyQueueScore,
+        applyPlayback,
+    };
 }

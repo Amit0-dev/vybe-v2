@@ -1,4 +1,6 @@
 import { SpaceStatus } from "../../generated/prisma/enums.js";
+import { publishRealtimeEvent } from "../../realtime/publishRealtimeEvent.js";
+import { RealtimeEvent } from "../../realtime/realtime.events.js";
 import { isUserConnectedToSpace } from "../../realtime/realtime.manager.js";
 import { deactivateSpace, findSpaceById } from "../space/space.repository.js";
 import { clearOwnerOffline, getOfflineSpaces, getOwnerOfflineAt } from "./playback.presence.js";
@@ -46,7 +48,15 @@ export async function handleOwnerRecovery() {
 
         await shutdownPlayback(spaceId);
 
-        await deactivateSpace(spaceId);
+        const result = await deactivateSpace(spaceId);
+
+        if (result.count === 1) {
+            await publishRealtimeEvent({
+                type: RealtimeEvent.SPACE_CLOSED,
+                spaceId,
+                reason: "OWNER_OFFLINE",
+            });
+        }
 
         await clearOwnerOffline(spaceId);
     }

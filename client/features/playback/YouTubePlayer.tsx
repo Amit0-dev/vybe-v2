@@ -73,7 +73,7 @@ export function YouTubePlayer({ videoId = null, onReady, onEnded, onPlay, onPaus
             events: {
                 onReady: () => {
                     const player = playerRef.current;
-                    if (!player) return;
+                    if (!player || typeof player.loadVideoById !== "function") return;
 
                     if (videoIdRef.current) player.loadVideoById(videoIdRef.current);
 
@@ -110,7 +110,7 @@ export function YouTubePlayer({ videoId = null, onReady, onEnded, onPlay, onPaus
     }, [initializePlayer]);
 
     useEffect(() => {
-        if (videoId && playerRef.current) {
+        if (videoId && typeof playerRef.current?.loadVideoById === "function") {
             playerRef.current.loadVideoById(videoId);
         }
     }, [videoId]);

@@ -142,7 +142,16 @@ export async function handleUserDisconnected(spaceId: string, userId: string) {
         return;
     }
 
-    await markOwnerOffline(spaceId);
+    const becameOffline = await markOwnerOffline(spaceId);
+
+    if (!becameOffline) {
+        return;
+    }
+
+    await publishRealtimeEvent({
+        type: RealtimeEvent.OWNER_OFFLINE,
+        spaceId,
+    });
 }
 
 export async function handleUserConnected(spaceId: string, userId: string) {
@@ -156,7 +165,16 @@ export async function handleUserConnected(spaceId: string, userId: string) {
         return;
     }
 
-    await clearOwnerOffline(spaceId);
+    const recovered = await clearOwnerOffline(spaceId);
+
+    if (!recovered) {
+        return;
+    }
+
+    await publishRealtimeEvent({
+        type: RealtimeEvent.OWNER_ONLINE,
+        spaceId,
+    });
 }
 
 export async function shutdownPlayback(spaceId: string) {

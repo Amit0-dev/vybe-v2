@@ -126,3 +126,8 @@ export async function cleanupExpiredPresence(spaceId: string) {
 
     return result as string[];
 }
+
+export async function getLiveUsersCountInSpace(spaceId: string) {
+    const count = await redis.sCard(getUsersKey(spaceId));
+    return count;
+}

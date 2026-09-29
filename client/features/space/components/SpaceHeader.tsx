@@ -8,6 +8,7 @@ import type { SpaceConnectionStatus } from "../types/ws.types";
 interface SpaceHeaderProps {
   spaceName?: string;
   members?: number;
+  liveUserCount?: number;
   connectionStatus?: SpaceConnectionStatus;
   isOwner?: boolean;
   actions?: React.ReactNode;
@@ -17,6 +18,7 @@ interface SpaceHeaderProps {
 export function SpaceHeader({
   spaceName = "Space",
   members = 0,
+  liveUserCount = 0,
   connectionStatus = "connecting",
   isOwner = false,
   actions,
@@ -80,9 +82,9 @@ export function SpaceHeader({
               {connectionStatus === "error" && "Connection error"}
             </span>
           </span>
-          {members > 0 && (
-            <span className="text-xs text-muted-foreground" aria-label="Member count">
-              {members} {members === 1 ? "member" : "members"}
+          {liveUserCount > 0 && (
+            <span className="text-xs text-muted-foreground" aria-label="Live user count">
+              {liveUserCount} {liveUserCount === 1 ? "user" : "users"} live
             </span>
           )}
           <ThemeToggle />

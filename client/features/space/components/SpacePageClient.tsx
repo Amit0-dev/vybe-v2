@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { SpaceRoom } from "@/features/space/components/SpaceRoom";
 import type { YouTubePlayerHandle } from "@/features/playback/YouTubePlayer";
 import { getPlaybackAudioUrl } from "@/features/playback/api/playback.api";
@@ -18,11 +19,14 @@ import { toast } from "sonner";
 import { useCustomTrack } from "../hooks/useCustomTrack";
 
 export function SpacePageClient({ spaceId }: { spaceId: string }) {
+    const router = useRouter();
     const { data: spaceData, isLoading: isSpaceLoading, error: spaceError } = useSpace(spaceId);
     const {
         status,
         snapshot,
         error: realtimeError,
+        isOwnerOnline,
+        isSpaceClosed,
         applyQueueItem,
         applyPlayback,
     } = useSpaceRealtime(spaceId);
@@ -82,7 +86,14 @@ export function SpacePageClient({ spaceId }: { spaceId: string }) {
         }));
     }, [snapshot?.queue, userVoteMap]);
     const memberCount = snapshot?.memberCount ?? 0;
+    const liveUserCount = snapshot?.liveUserCount ?? 0;
     const currentPlayback = snapshot?.playback ?? null;
+
+    useEffect(() => {
+        if (isSpaceClosed) {
+            router.replace("/spaces");
+        }
+    }, [isSpaceClosed, router]);
 
     const loadPlaybackItem = useCallback(
         async (queueItem: NonNullable<typeof currentPlayback>, autoPlay: boolean) => {
@@ -326,10 +337,11 @@ export function SpacePageClient({ spaceId }: { spaceId: string }) {
         <SpaceRoom
             spaceName={spaceData.name}
             members={memberCount}
+            liveUserCount={liveUserCount}
             isOwner={spaceData.isOwner}
-            isOwnerOnline={true}
+            isOwnerOnline={isOwnerOnline}
             ownerName={"Test Owner"}
-            spaceStatus={spaceData.status}
+            spaceStatus={isSpaceClosed ? "CLOSED" : spaceData.status}
             track={currentPlayback}
             progressSec={progressSec}
             isPlaying={isPlaying}

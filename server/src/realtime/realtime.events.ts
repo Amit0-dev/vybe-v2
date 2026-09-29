@@ -7,6 +7,10 @@ export const RealtimeEvent = {
     QUEUE_ITEM_COMPLETED: "QUEUE_ITEM_COMPLETED",
     QUEUE_ITEM_PLAYING: "QUEUE_ITEM_PLAYING",
     SPACE_SNAPSHOT: "SPACE_SNAPSHOT",
+
+    OWNER_OFFLINE: "OWNER_OFFLINE",
+    OWNER_ONLINE: "OWNER_ONLINE",
+    SPACE_CLOSED: "SPACE_CLOSED",
 } as const;
 
 export type QueueItemVoteUpdatedEvent = {
@@ -59,9 +63,28 @@ export type QueueItemAddedEvent = {
     };
 };
 
+export type OwnerOfflineEvent = {
+    type: typeof RealtimeEvent.OWNER_OFFLINE;
+    spaceId: string;
+};
+
+export type OwnerOnlineEvent = {
+    type: typeof RealtimeEvent.OWNER_ONLINE;
+    spaceId: string;
+};
+
+export type SpaceClosedEvent = {
+    type: typeof RealtimeEvent.SPACE_CLOSED;
+    spaceId: string;
+    reason: "OWNER_OFFLINE";
+};
+
 export type RealTimeEventPayload =
     | QueueItemVoteUpdatedEvent
     | QueueItemPlayingEvent
     | QueueItemSkippedEvent
     | QueueItemCompletedEvent
-    | QueueItemAddedEvent;
+    | QueueItemAddedEvent
+    | OwnerOfflineEvent
+    | OwnerOnlineEvent
+    | SpaceClosedEvent;
