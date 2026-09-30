@@ -26,16 +26,20 @@ export function MagicLinkForm() {
     async function onSubmit(data: MagicLinkFormValues) {
         setServerError(null);
 
-        const result = await sendMagicLink(data.email);
+        try {
+            const result = await sendMagicLink(data.email);
 
-        if (result.error) {
-            setServerError(
-                result.error.message || "An error occurred while sending the magic link.",
-            );
-            return;
+            if (result.error) {
+                setServerError(
+                    result.error.message || "An error occurred while sending the magic link.",
+                );
+                return;
+            }
+
+            setIsSent(true);
+        } catch {
+            setServerError("We could not send the magic link. Please try again.");
         }
-
-        setIsSent(true);
     }
 
     if (isSent) {

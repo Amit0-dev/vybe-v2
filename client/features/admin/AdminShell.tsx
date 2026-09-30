@@ -5,7 +5,6 @@ import { usePathname } from "next/navigation";
 import {
   LayoutDashboard,
   Library,
-  ScrollText,
   LogOut,
 } from "lucide-react";
 import { ThemeToggle } from "@/components/theme/ThemeToggle";
@@ -14,7 +13,6 @@ import { cn } from "@/lib/utils";
 const NAV = [
   { href: "/admin/dashboard", label: "Dashboard", icon: LayoutDashboard },
   { href: "/admin/library", label: "Library", icon: Library },
-  { href: "/admin/logs", label: "Logs", icon: ScrollText },
 ] as const;
 
 interface AdminShellProps {

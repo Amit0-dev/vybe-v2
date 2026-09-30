@@ -1,6 +1,6 @@
 import { createClient } from "redis";
 import { env } from "../config/env.js";
-import { logger } from "./logger.js";
+import { apiLogger } from "./logger.js";
 
 function createRedisClient() {
     const client = createClient({
@@ -8,7 +8,7 @@ function createRedisClient() {
     });
 
     client.on("error", (error) => {
-        logger.error(error, "Redis client error");
+        apiLogger.error(error, "Redis client error");
     });
 
     return client;

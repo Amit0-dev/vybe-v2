@@ -1,6 +1,6 @@
 import type { ErrorRequestHandler } from "express";
 import { env } from "../config/env.js";
-import { logger } from "../infra/logger.js";
+import { apiLogger } from "../infra/logger.js";
 import { AppError } from "../lib/errors.js";
 import { ZodError } from "zod";
 
@@ -24,7 +24,7 @@ export const errorHandler: ErrorRequestHandler = (error, req, res, _next) => {
         });
     }
 
-    logger.error(
+    apiLogger.error(
         {
             err: error,
             method: req.method,

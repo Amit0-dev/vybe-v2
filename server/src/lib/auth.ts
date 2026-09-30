@@ -4,7 +4,8 @@ import { betterAuth } from "better-auth";
 import prisma from "../infra/db.js";
 import { env } from "../config/env.js";
 import { magicLink } from "better-auth/plugins";
-import { logger } from "../infra/logger.js";
+import { apiLogger } from "../infra/logger.js";
+import { magicLinkTemplate, sendEmail } from "../integrations/email/resend.js";
 
 export const auth = betterAuth({
     database: prismaAdapter(prisma, {
@@ -31,14 +32,18 @@ export const auth = betterAuth({
     plugins: [
         magicLink({
             sendMagicLink: async ({ email, url }) => {
-                if (env.NODE_ENV === "development") {
-                    logger.info(
-                        {
-                            email,
-                            url,
-                        },
-                        "Magic link generated",
-                    );
+                try {
+                    await sendEmail({
+                        to: email,
+                        subject: "Sign in to Vybe",
+                        html: magicLinkTemplate(url),
+                    });
+
+                    apiLogger.info({ email }, "Magic link email sent");
+                } catch (error) {
+                    apiLogger.error({ err: error, email }, "Failed to send magic link email");
+
+                    throw new Error("Unable to send magic link email");
                 }
             },
         }),
