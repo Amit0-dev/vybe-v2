@@ -106,15 +106,22 @@ export function AddTrackDialog({
         }
     }
 
-    function submitCustom() {
+    async function submitCustom() {
         if (!selected || isLoading) return;
-        onAdd?.({
-            source: "custom",
-            trackId: selected.id,
-            title: selected.title,
-            artist: selected.artist ?? undefined,
-        });
-        handleOpenChange(false);
+
+        setSubmitError(null);
+
+        try {
+            await onAdd?.({
+                source: "custom",
+                trackId: selected.id,
+                title: selected.title,
+                artist: selected.artist ?? undefined,
+            });
+            handleOpenChange(false);
+        } catch {
+            setSubmitError("Failed to add track. Please try again.");
+        }
     }
 
     const isCustom = step === "custom";

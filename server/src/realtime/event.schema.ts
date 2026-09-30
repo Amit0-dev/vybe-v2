@@ -68,6 +68,17 @@ const spaceClosedSchema = z.object({
     reason: z.literal("OWNER_OFFLINE"),
 });
 
+const spaceMemberJoinedSchema = z.object({
+    type: z.literal(RealtimeEvent.SPACE_MEMBER_JOINED),
+    spaceId: z.string(),
+});
+
+const liveUserCountUpdatedSchema = z.object({
+    type: z.literal(RealtimeEvent.LIVE_USER_COUNT_UPDATED),
+    spaceId: z.string(),
+    liveUserCount: z.number().int().nonnegative(),
+});
+
 export const realtimeEventSchema = z.discriminatedUnion("type", [
     queueItemVoteUpdatedSchema,
     queueItemPlayingSchema,
@@ -77,4 +88,6 @@ export const realtimeEventSchema = z.discriminatedUnion("type", [
     ownerOfflineSchema,
     ownerOnlineSchema,
     spaceClosedSchema,
+    spaceMemberJoinedSchema,
+    liveUserCountUpdatedSchema,
 ]);

@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, Users } from "lucide-react";
 import { Container } from "@/components/layout/Container";
 import { ThemeToggle } from "@/components/theme/ThemeToggle";
 import { cn } from "@/lib/utils";
@@ -81,6 +81,13 @@ export function SpaceHeader({
               {connectionStatus === "disconnected" && "Disconnected"}
               {connectionStatus === "error" && "Connection error"}
             </span>
+          </span>
+          <span
+            className="flex items-center gap-1.5 text-xs text-muted-foreground"
+            aria-label="Total member count"
+          >
+            <Users className="size-3.5" aria-hidden="true" />
+            {members} {members === 1 ? "member" : "members"}
           </span>
           {liveUserCount > 0 && (
             <span className="text-xs text-muted-foreground" aria-label="Live user count">

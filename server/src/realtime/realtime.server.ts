@@ -13,6 +13,8 @@ import {
 import { getSpaceRealtimeSnapshot } from "../modules/space/space-realtime.service.js";
 import { RealtimeEvent } from "./realtime.events.js";
 import { refreshConnection, registerConnection, unregisterConnection } from "./presence.service.js";
+import { getLiveUsersCountInSpace } from "./presence.service.js";
+import { publishRealtimeEvent } from "./publishRealtimeEvent.js";
 
 export interface RealtimeSocket extends WebSocket {
     userId: string;
@@ -85,6 +87,12 @@ export function initializeRealtime(server: Server) {
             realtimeSocket.spaceId = spaceId;
             realtimeSocket.isAlive = true;
 
+            if (socket.readyState !== WebSocket.OPEN) {
+                return;
+            }
+
+            const previousLiveUserCount = await getLiveUsersCountInSpace(spaceId);
+
             // add to Space connections
             addConnection(spaceId, realtimeSocket);
 
@@ -105,6 +113,12 @@ export function initializeRealtime(server: Server) {
                 );
 
                 socket.close(1011, "Realtime service unavailable");
+                return;
+            }
+
+            if (socket.readyState !== WebSocket.OPEN) {
+                removeConnection(spaceId, realtimeSocket);
+                await unregisterConnection(spaceId, presenceConnectionId, user.id);
                 return;
             }
 
@@ -150,6 +164,16 @@ export function initializeRealtime(server: Server) {
                 );
             }
 
+            const liveUserCount = await getLiveUsersCountInSpace(spaceId);
+
+            if (liveUserCount !== previousLiveUserCount) {
+                await publishRealtimeEvent({
+                    type: RealtimeEvent.LIVE_USER_COUNT_UPDATED,
+                    spaceId,
+                    liveUserCount,
+                });
+            }
+
             logger.info({ userId: user.id, spaceId }, "WebSocket client connected");
 
             socket.on("close", async () => {
@@ -185,6 +209,14 @@ export function initializeRealtime(server: Server) {
 
                 if (isRealtimeShuttingDown) {
                     return;
+                }
+
+                if (becameOffline) {
+                    await publishRealtimeEvent({
+                        type: RealtimeEvent.LIVE_USER_COUNT_UPDATED,
+                        spaceId,
+                        liveUserCount: await getLiveUsersCountInSpace(spaceId),
+                    });
                 }
 
                 if (becameOffline) {

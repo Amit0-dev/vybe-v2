@@ -9,6 +9,13 @@ export async function addYouTubeTrackToSpace(spaceId: string, url: string) {
     });
 }
 
+export async function addTrackToSpace(spaceId: string, trackId: string) {
+    return apiClient<AddYouTubeTrackResponse>(`/api/spaces/${spaceId}/queue`, {
+        method: "POST",
+        body: JSON.stringify({ trackId }),
+    });
+}
+
 export async function getCustomTracks(search?: string, page?: number, limit?: number) {
     const params = new URLSearchParams({
         page: String(page ?? 1),

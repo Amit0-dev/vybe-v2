@@ -12,6 +12,7 @@ import { useStartPlayback } from "@/features/playback/hooks/useStartPlayback";
 import { useSpace } from "../hooks/useSpace";
 import { useSpaceRealtime } from "../hooks/useSpaceRealtime";
 import { useAddYoutubeTrack } from "../hooks/useAddYoutubeTrack";
+import { useAddCustomTrack } from "../hooks/useAddCustomTrack";
 import type { AddTrackPayload } from "@/features/queue/AddTrackDialog";
 import { useVoteQueueItem } from "@/features/queue/hooks/useVoteQueueItem";
 import { ApiError } from "@/lib/api-client";
@@ -31,6 +32,7 @@ export function SpacePageClient({ spaceId }: { spaceId: string }) {
         applyPlayback,
     } = useSpaceRealtime(spaceId);
     const addYoutubeMutation = useAddYoutubeTrack(spaceId);
+    const addCustomMutation = useAddCustomTrack(spaceId);
 
     const voteMutation = useVoteQueueItem(spaceId);
     const startPlaybackMutation = useStartPlayback(spaceId);
@@ -46,7 +48,8 @@ export function SpacePageClient({ spaceId }: { spaceId: string }) {
     const progressInterval = useRef<ReturnType<typeof setInterval> | null>(null);
     const loadedPlaybackId = useRef<string | null>(null);
 
-    const { isPending: isAddingTrack, error: addTrackError } = addYoutubeMutation;
+    const isAddingTrack = addYoutubeMutation.isPending || addCustomMutation.isPending;
+    const addTrackError = addYoutubeMutation.error ?? addCustomMutation.error;
 
     const { isPending: isVoting } = voteMutation;
 
@@ -221,11 +224,15 @@ export function SpacePageClient({ spaceId }: { spaceId: string }) {
 
     const handleAddTrack = useCallback(
         async (payload: AddTrackPayload) => {
-            if (payload.source !== "youtube" || !payload.url) {
+            let response;
+
+            if (payload.source === "youtube" && payload.url?.trim()) {
+                response = await addYoutubeMutation.mutateAsync(payload.url);
+            } else if (payload.source === "custom" && payload.trackId) {
+                response = await addCustomMutation.mutateAsync(payload.trackId);
+            } else {
                 throw new Error("Unsupported track source");
             }
-
-            const response = await addYoutubeMutation.mutateAsync(payload.url);
 
             switch (response.action) {
                 case "CREATED": {
@@ -237,7 +244,7 @@ export function SpacePageClient({ spaceId }: { spaceId: string }) {
                 }
             }
         },
-        [addYoutubeMutation, applyQueueItem],
+        [addCustomMutation, addYoutubeMutation, applyQueueItem],
     );
 
     const handleVote = useCallback(

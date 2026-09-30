@@ -13,6 +13,8 @@ import {
     reopenSpace as reopenSpaceRecord,
     findSpacesByUserId,
 } from "./space.repository.js";
+import { publishRealtimeEvent } from "../../realtime/publishRealtimeEvent.js";
+import { RealtimeEvent } from "../../realtime/realtime.events.js";
 import { Prisma } from "../../generated/prisma/client.js";
 import {
     ConflictError,
@@ -73,7 +75,14 @@ export async function joinSpace(input: JoinSpaceInput, userId: string) {
         throw new ConflictError("You are already a member of this space", "ALREADY_MEMBER");
     }
 
-    return createMembership(userId, space.id);
+    const membership = await createMembership(userId, space.id);
+
+    await publishRealtimeEvent({
+        type: RealtimeEvent.SPACE_MEMBER_JOINED,
+        spaceId: space.id,
+    });
+
+    return membership;
 }
 
 export async function getSpace(spaceId: string) {

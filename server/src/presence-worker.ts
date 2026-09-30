@@ -1,17 +1,20 @@
 import { connectWorkerInfra, disconnectWorkerInfra } from "./infra/index.js";
 import { logger } from "./infra/logger.js";
+import { redisPublisher } from "./infra/redis.js";
 import { startPresenceWorker, stopPresenceWorker } from "./workers/presence.worker.js";
 
 let shuttingDown = false;
 
 async function startWorker() {
     await connectWorkerInfra();
+    await redisPublisher.connect();
 
     logger.info("Presence worker started");
 
     await startPresenceWorker();
 
     await disconnectWorkerInfra();
+    await redisPublisher.quit();
 
     logger.info("Presence worker stopped");
 }
@@ -44,6 +47,7 @@ startWorker().catch(async (error) => {
         "Presence worker crashed",
     );
 
+    await redisPublisher.quit();
     await disconnectWorkerInfra();
     process.exit(1);
 });

@@ -91,6 +91,30 @@ export function useSpaceRealtime(spaceId: string) {
                     break;
                 }
 
+                case "SPACE_MEMBER_JOINED": {
+                    setSnapshot((current) => {
+                        if (!current) return current;
+
+                        return {
+                            ...current,
+                            memberCount: current.memberCount + 1,
+                        };
+                    });
+                    break;
+                }
+
+                case "LIVE_USER_COUNT_UPDATED": {
+                    setSnapshot((current) => {
+                        if (!current) return current;
+
+                        return {
+                            ...current,
+                            liveUserCount: message.liveUserCount,
+                        };
+                    });
+                    break;
+                }
+
                 case "QUEUE_ITEM_ADDED": {
                     const queueItem = message.queueItem;
 

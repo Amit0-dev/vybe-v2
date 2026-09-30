@@ -22,6 +22,15 @@ export type ServerMessage =
           payload: SpaceSnapshot;
       }
     | {
+          type: "SPACE_MEMBER_JOINED";
+          spaceId: string;
+      }
+    | {
+          type: "LIVE_USER_COUNT_UPDATED";
+          spaceId: string;
+          liveUserCount: number;
+      }
+    | {
           type: "QUEUE_ITEM_ADDED";
           spaceId: string;
           queueItem: ApiQueueItem;

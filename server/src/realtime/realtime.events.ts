@@ -7,6 +7,8 @@ export const RealtimeEvent = {
     QUEUE_ITEM_COMPLETED: "QUEUE_ITEM_COMPLETED",
     QUEUE_ITEM_PLAYING: "QUEUE_ITEM_PLAYING",
     SPACE_SNAPSHOT: "SPACE_SNAPSHOT",
+    SPACE_MEMBER_JOINED: "SPACE_MEMBER_JOINED",
+    LIVE_USER_COUNT_UPDATED: "LIVE_USER_COUNT_UPDATED",
 
     OWNER_OFFLINE: "OWNER_OFFLINE",
     OWNER_ONLINE: "OWNER_ONLINE",
@@ -79,6 +81,17 @@ export type SpaceClosedEvent = {
     reason: "OWNER_OFFLINE";
 };
 
+export type SpaceMemberJoinedEvent = {
+    type: typeof RealtimeEvent.SPACE_MEMBER_JOINED;
+    spaceId: string;
+};
+
+export type LiveUserCountUpdatedEvent = {
+    type: typeof RealtimeEvent.LIVE_USER_COUNT_UPDATED;
+    spaceId: string;
+    liveUserCount: number;
+};
+
 export type RealTimeEventPayload =
     | QueueItemVoteUpdatedEvent
     | QueueItemPlayingEvent
@@ -87,4 +100,6 @@ export type RealTimeEventPayload =
     | QueueItemAddedEvent
     | OwnerOfflineEvent
     | OwnerOnlineEvent
-    | SpaceClosedEvent;
+    | SpaceClosedEvent
+    | SpaceMemberJoinedEvent
+    | LiveUserCountUpdatedEvent;
