@@ -11,9 +11,15 @@ import { trackRouter } from "./modules/track/track.routes.js";
 import { queueRouter } from "./modules/queue/queue.routes.js";
 import { voteRouter } from "./modules/vote/vote.routes.js";
 import { playbackRouter } from "./modules/playback/playback.routes.js";
+import {pinoHttp} from "pino-http";
+import { apiLogger } from "./infra/logger.js";
 
 export function createApp() {
     const app = express();
+
+    app.use(pinoHttp({
+        logger: apiLogger
+    }))
 
     app.use(
         cors({

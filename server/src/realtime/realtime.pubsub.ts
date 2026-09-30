@@ -1,4 +1,4 @@
-import { logger } from "../infra/logger.js";
+import { apiLogger } from "../infra/logger.js";
 import { redisSubscriber } from "../infra/redis.js";
 import { realtimeEventSchema } from "./event.schema.js";
 import { broadcastToSpace } from "./realtime.manager.js";
@@ -12,14 +12,14 @@ export async function subscribeToRealtimeEvents() {
         try {
             rawEvent = JSON.parse(message);
         } catch (error) {
-            logger.error({ error, message }, "Invalid JSON received from Redis");
+            apiLogger.error({ error, message }, "Invalid JSON received from Redis");
             return;
         }
 
         const parsed = realtimeEventSchema.safeParse(rawEvent);
 
         if (!parsed.success) {
-            logger.error(
+            apiLogger.error(
                 {
                     error: parsed.error,
                     message,

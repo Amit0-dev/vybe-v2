@@ -1,4 +1,4 @@
-import { logger } from "../infra/logger.js";
+import { presenceWorkerLogger } from "../infra/logger.js";
 import { handleUserDisconnected } from "../modules/playback/playback.service.js";
 import { findActiveSpaces } from "../modules/queue/queue.repository.js";
 import { cleanupExpiredPresence } from "../realtime/presence.service.js";
@@ -23,7 +23,7 @@ async function cleanupPresence() {
             continue;
         }
 
-        logger.info(
+        presenceWorkerLogger.info(
             {
                 spaceId: space.id,
                 offlineUsers,
@@ -48,7 +48,7 @@ export async function startPresenceWorker() {
         try {
             await cleanupPresence();
         } catch (error) {
-            logger.error(
+            presenceWorkerLogger.error(
                 {
                     err: error,
                 },

@@ -1,6 +1,6 @@
 import { createApp } from "./app.js";
 import { env } from "./config/env.js";
-import { logger } from "./infra/logger.js";
+import { apiLogger } from "./infra/logger.js";
 import { connectInfra, disconnectInfra } from "./infra/index.js";
 import type { Server } from "node:http";
 import { closeRealtime, initializeRealtime } from "./realtime/realtime.server.js";
@@ -15,17 +15,17 @@ try {
     await subscribeToRealtimeEvents();
 
     server = app.listen(env.PORT, () => {
-        logger.info(`Server running on port ${env.PORT}`);
+        apiLogger.info(`Server running on port ${env.PORT}`);
     });
 
     initializeRealtime(server);
 } catch (error) {
-    logger.fatal(error, "Failed to start application");
+    apiLogger.fatal(error, "Failed to start application");
     process.exit(1);
 }
 
 async function shutdown(signal: string) {
-    logger.info(`${signal} received. Shutting down...`);
+    apiLogger.info(`${signal} received. Shutting down...`);
 
     try {
         await closeRealtime();
@@ -45,10 +45,10 @@ async function shutdown(signal: string) {
 
         await disconnectInfra();
 
-        logger.info("Application shutdown complete");
+        apiLogger.info("Application shutdown complete");
         process.exit(0);
     } catch (error) {
-        logger.error({ err: error }, "Error during shutdown");
+        apiLogger.error({ err: error }, "Error during shutdown");
         process.exit(1);
     }
 }

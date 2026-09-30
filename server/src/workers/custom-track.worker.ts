@@ -1,4 +1,4 @@
-import { logger } from "../infra/logger.js";
+import { customTrackWorkerLogger } from "../infra/logger.js";
 import { deleteMessage } from "../integrations/queue/sqs.client.js";
 import { parseS3Event } from "../integrations/storage/s3.events.js";
 import { processCustomTrack } from "../modules/track/custom-track.processor.js";
@@ -9,7 +9,7 @@ export async function processSqsMessage(message: {
     ReceiptHandle?: string | undefined;
 }) {
     if (!message.Body) {
-        logger.warn(
+        customTrackWorkerLogger.warn(
             {
                 messageId: message.MessageId,
             },
@@ -24,7 +24,7 @@ export async function processSqsMessage(message: {
     try {
         records = parseS3Event(message.Body);
     } catch (error) {
-        logger.warn(
+        customTrackWorkerLogger.error(
             {
                 err: error,
                 messageId: message.MessageId,
@@ -49,7 +49,7 @@ export async function processSqsMessage(message: {
         await deleteMessage(message.ReceiptHandle);
     }
 
-    logger.info(
+    customTrackWorkerLogger.info(
         {
             messageId: message.MessageId,
             records: records.length,

@@ -1,5 +1,5 @@
 import { connectWorkerInfra, disconnectWorkerInfra } from "./infra/index.js";
-import { logger } from "./infra/logger.js";
+import { queueReconciliationLogger } from "./infra/logger.js";
 import {
     startQueueReconciliationWorker,
     stopQueueReconciliationWorker,
@@ -10,13 +10,13 @@ let shuttingDown = false;
 async function startWorker() {
     await connectWorkerInfra();
 
-    logger.info("Queue reconciliation worker started");
+    queueReconciliationLogger.info("Queue reconciliation worker started");
 
     await startQueueReconciliationWorker();
 
     await disconnectWorkerInfra();
 
-    logger.info("Queue reconciliation worker stopped");
+    queueReconciliationLogger.info("Queue reconciliation worker stopped");
 }
 
 async function shutdown(signal: string) {
@@ -26,7 +26,7 @@ async function shutdown(signal: string) {
 
     shuttingDown = true;
 
-    logger.info(`${signal} received. Shutting down worker...`);
+    queueReconciliationLogger.info(`${signal} received. Shutting down worker...`);
 
     stopQueueReconciliationWorker();
 }
@@ -40,13 +40,13 @@ process.on("SIGINT", () => {
 });
 
 startWorker().catch(async (error) => {
-    logger.fatal(
+    queueReconciliationLogger.fatal(
         {
             err: error,
         },
         "Queue reconciliation worker crashed",
     );
-    
+
     await disconnectWorkerInfra();
     process.exit(1);
 });

@@ -1,5 +1,4 @@
 import { redis } from "../../infra/redis.js";
-import { Repair } from "./queue.reconciliation.js";
 import { findQueueItemsForRanking } from "./queue.repository.js";
 
 type RankingScoreUpdate = {

@@ -1,6 +1,5 @@
 import { connectWorkerInfra, disconnectWorkerInfra } from "./infra/index.js";
-import { logger } from "./infra/logger.js";
-import { redisPublisher } from "./infra/redis.js";
+import { presenceWorkerLogger } from "./infra/logger.js";
 import { startPresenceWorker, stopPresenceWorker } from "./workers/presence.worker.js";
 
 let shuttingDown = false;
@@ -8,13 +7,13 @@ let shuttingDown = false;
 async function startWorker() {
     await connectWorkerInfra();
 
-    logger.info("Presence worker started");
+    presenceWorkerLogger.info("Presence worker started");
 
     await startPresenceWorker();
 
     await disconnectWorkerInfra();
 
-    logger.info("Presence worker stopped");
+    presenceWorkerLogger.info("Presence worker stopped");
 }
 
 async function shutdown(signal: string) {
@@ -24,7 +23,7 @@ async function shutdown(signal: string) {
 
     shuttingDown = true;
 
-    logger.info(`${signal} received. Shutting down presence worker...`);
+    presenceWorkerLogger.info(`${signal} received. Shutting down presence worker...`);
 
     stopPresenceWorker();
 }
@@ -38,7 +37,7 @@ process.on("SIGINT", () => {
 });
 
 startWorker().catch(async (error) => {
-    logger.fatal(
+    presenceWorkerLogger.fatal(
         {
             err: error,
         },

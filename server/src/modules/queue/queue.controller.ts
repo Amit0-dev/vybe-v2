@@ -4,7 +4,6 @@ import {
     addTrackToQueue,
     addYouTubeTrackToQueue,
     getQueue,
-    skipQueueItem,
 } from "./queue.service.js";
 import { parseSpaceIdParams } from "../../middleware/space.middleware.js";
 import { z } from "zod";

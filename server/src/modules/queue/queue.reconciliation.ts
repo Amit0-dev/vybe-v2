@@ -42,7 +42,6 @@ async function reconcilePostgresProjection(spaceId: string) {
         }
     }
 
-    console.log("POSTGRES REPAIRS : ", repairs)
     if (repairs.length > 0) {
         await batchUpdateQueueItemScores(repairs);
     }
@@ -78,10 +77,5 @@ async function reconcileRedisProjection(spaceId: string, expectedScores: Map<str
         }
     }
 
-    console.log({
-        removals,
-        scoreUpdates,
-        spaceId
-    })
     await repairQueueRanking(spaceId, scoreUpdates, removals);
 }

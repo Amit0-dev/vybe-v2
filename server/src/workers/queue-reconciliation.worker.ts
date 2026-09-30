@@ -1,5 +1,5 @@
 import { acquireLock, releaseLock } from "../infra/distributed-lock.js";
-import { logger } from "../infra/logger.js";
+import { queueReconciliationLogger } from "../infra/logger.js";
 import { handleOwnerRecovery } from "../modules/playback/playback.recovery.js";
 import { reconcileSpaceQueue } from "../modules/queue/queue.reconciliation.js";
 import {
@@ -38,7 +38,7 @@ export async function reconcileSpaces() {
             await reconcileSpaceQueue(spaceId);
             await clearSpaceReconciliation(spaceId);
         } catch (error) {
-            logger.error(
+            queueReconciliationLogger.error(
                 {
                     err: error,
                     spaceId,
@@ -57,7 +57,7 @@ export async function startQueueReconciliationWorker() {
             await reconcileSpaces();
             await handleOwnerRecovery();
         } catch (error) {
-            logger.error(
+            queueReconciliationLogger.error(
                 {
                     err: error,
                 },

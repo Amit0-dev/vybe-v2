@@ -7,7 +7,6 @@ import { getPlaybackCandidates } from "../queue/queue.ranking.js";
 import {
     claimQueueItem,
     findPlayingQueueItem,
-    findQueueItemById,
     findQueueItemForAudio,
     findQueueItemForPlayback,
     findQueueItemInSpace,

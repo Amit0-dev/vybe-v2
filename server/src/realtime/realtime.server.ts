@@ -1,11 +1,11 @@
 import { WebSocketServer, WebSocket } from "ws";
 import { Server } from "node:http";
-import { logger } from "../infra/logger.js";
+import { apiLogger } from "../infra/logger.js";
 import { auth } from "../lib/auth.js";
 import { fromNodeHeaders } from "better-auth/node";
 import { findUserById } from "../modules/auth/auth.repository.js";
 import { findMembership } from "../modules/space/space.repository.js";
-import { addConnection, isUserConnectedToSpace, removeConnection } from "./realtime.manager.js";
+import { addConnection, removeConnection } from "./realtime.manager.js";
 import {
     handleUserConnected,
     handleUserDisconnected,
@@ -103,7 +103,7 @@ export function initializeRealtime(server: Server) {
             } catch (error) {
                 removeConnection(spaceId, realtimeSocket);
 
-                logger.error(
+                apiLogger.error(
                     {
                         err: error,
                         userId: user.id,
@@ -128,7 +128,7 @@ export function initializeRealtime(server: Server) {
                 try {
                     await refreshConnection(spaceId, presenceConnectionId, user.id);
                 } catch (error) {
-                    logger.error(
+                    apiLogger.error(
                         {
                             err: error,
                             userId: user.id,
@@ -154,7 +154,7 @@ export function initializeRealtime(server: Server) {
             try {
                 await handleUserConnected(spaceId, user.id);
             } catch (error) {
-                logger.error(
+                apiLogger.error(
                     {
                         err: error,
                         userId: user.id,
@@ -174,7 +174,7 @@ export function initializeRealtime(server: Server) {
                 });
             }
 
-            logger.info({ userId: user.id, spaceId }, "WebSocket client connected");
+            apiLogger.info({ userId: user.id, spaceId }, "WebSocket client connected");
 
             socket.on("close", async () => {
                 removeConnection(spaceId, realtimeSocket);
@@ -188,7 +188,7 @@ export function initializeRealtime(server: Server) {
                         user.id,
                     );
                 } catch (error) {
-                    logger.error(
+                    apiLogger.error(
                         {
                             err: error,
                             userId: user.id,
@@ -198,7 +198,7 @@ export function initializeRealtime(server: Server) {
                     );
                 }
 
-                logger.info(
+                apiLogger.info(
                     {
                         userId: user.id,
                         spaceId,
@@ -223,7 +223,7 @@ export function initializeRealtime(server: Server) {
                     try {
                         await handleUserDisconnected(spaceId, user.id);
                     } catch (error) {
-                        logger.error(
+                        apiLogger.error(
                             {
                                 err: error,
                                 userId: user.id,
@@ -236,16 +236,16 @@ export function initializeRealtime(server: Server) {
             });
 
             socket.on("error", (error) => {
-                logger.error(error, "WebSocket client error");
+                apiLogger.error(error, "WebSocket client error");
             });
         } catch (error) {
-            logger.error(error, "WebSocket authentication failed");
+            apiLogger.error(error, "WebSocket authentication failed");
 
             socket.close(1011, "Internal server error");
         }
     });
 
-    logger.info("WebSocket server initialized");
+    apiLogger.info("WebSocket server initialized");
 }
 
 export async function closeRealtime() {

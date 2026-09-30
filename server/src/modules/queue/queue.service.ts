@@ -1,6 +1,6 @@
 import { Prisma } from "../../generated/prisma/client.js";
 import { QueueItemStatus } from "../../generated/prisma/enums.js";
-import { logger } from "../../infra/logger.js";
+import { apiLogger } from "../../infra/logger.js";
 import { ConflictError, NotFoundError } from "../../lib/errors.js";
 import { publishRealtimeEvent } from "../../realtime/publishRealtimeEvent.js";
 import { RealtimeEvent } from "../../realtime/realtime.events.js";
@@ -46,7 +46,7 @@ export async function addTrackToQueue(spaceId: string, trackId: string, userId: 
         try {
             await addQueueItem(spaceId, queueItem.id, queueItem.score);
         } catch (error) {
-            logger.error(
+            apiLogger.error(
                 {
                     error,
                     queueItemId: queueItem.id,
@@ -58,7 +58,7 @@ export async function addTrackToQueue(spaceId: string, trackId: string, userId: 
             try {
                 await markSpaceForReconciliation(spaceId);
             } catch (reconciliationError) {
-                logger.error(
+                apiLogger.error(
                     {
                         error: reconciliationError,
                         spaceId,
@@ -174,7 +174,7 @@ export async function transitionQueueItem(queueItemId: string, nextStatus: Queue
         try {
             await removeQueueItem(queueItem.spaceId, queueItem.id);
         } catch (error) {
-            logger.error(
+            apiLogger.error(
                 {
                     error,
                     queueItemId: queueItem.id,
@@ -186,7 +186,7 @@ export async function transitionQueueItem(queueItemId: string, nextStatus: Queue
             try {
                 await markSpaceForReconciliation(queueItem.spaceId);
             } catch (reconciliationError) {
-                logger.error(
+                apiLogger.error(
                     {
                         error: reconciliationError,
                         spaceId: queueItem.spaceId,

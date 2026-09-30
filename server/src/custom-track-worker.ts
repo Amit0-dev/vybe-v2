@@ -1,9 +1,9 @@
-import { logger } from "./infra/logger.js";
+import { customTrackWorkerLogger } from "./infra/logger.js";
 import { receiveMessages } from "./integrations/queue/sqs.client.js";
 import { processSqsMessage } from "./workers/custom-track.worker.js";
 
 async function startWorker() {
-    logger.info("Custom track worker started");
+    customTrackWorkerLogger.info("Custom track worker started");
 
     while (true) {
         try {
@@ -17,7 +17,7 @@ async function startWorker() {
                 try {
                     await processSqsMessage(message);
                 } catch (error) {
-                    logger.error(
+                    customTrackWorkerLogger.error(
                         {
                             err: error,
                             messageId: message.MessageId,
@@ -27,7 +27,7 @@ async function startWorker() {
                 }
             }
         } catch (error) {
-            logger.error(
+            customTrackWorkerLogger.error(
                 {
                     err: error,
                 },
@@ -38,7 +38,7 @@ async function startWorker() {
 }
 
 startWorker().catch((error) => {
-    logger.fatal(
+    customTrackWorkerLogger.fatal(
         {
             err: error,
         },

@@ -1,6 +1,6 @@
 import { Prisma } from "../../generated/prisma/client.js";
 import prisma from "../../infra/db.js";
-import { logger } from "../../infra/logger.js";
+import { apiLogger } from "../../infra/logger.js";
 import { NotFoundError, TooManyRequestsError } from "../../lib/errors.js";
 import { publishRealtimeEvent } from "../../realtime/publishRealtimeEvent.js";
 import { RealtimeEvent } from "../../realtime/realtime.events.js";
@@ -97,7 +97,7 @@ export async function voteOnQueueItem(
                 score,
             });
         } catch (error) {
-            logger.error(
+            apiLogger.error(
                 {
                     error,
                     spaceId,
@@ -110,7 +110,7 @@ export async function voteOnQueueItem(
             try {
                 await markSpaceForReconciliation(spaceId);
             } catch (reconciliationError) {
-                logger.error(
+                apiLogger.error(
                     {
                         error: reconciliationError,
                         spaceId,
