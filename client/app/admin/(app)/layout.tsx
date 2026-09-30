@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { AdminShell } from "@/features/admin/AdminShell";
+import { AdminRouteGuard } from "@/features/admin/AdminRouteGuard";
 
 export const metadata: Metadata = {
   title: {
@@ -14,5 +15,9 @@ export default function AdminAppLayout({
 }: {
   children: React.ReactNode;
 }) {
-  return <AdminShell>{children}</AdminShell>;
+  return (
+    <AdminRouteGuard>
+      <AdminShell>{children}</AdminShell>
+    </AdminRouteGuard>
+  );
 }

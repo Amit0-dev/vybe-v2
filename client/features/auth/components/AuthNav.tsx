@@ -4,11 +4,13 @@ import Link from "next/link";
 
 import { buttonVariants } from "@/components/ui/button";
 import { useSession } from "../hooks/useSession";
+import { useCurrentUser } from "../hooks/useCurrentUser";
 import { LogoutButton } from "./LogoutButton";
 import { cn } from "@/lib/utils";
 
 export function AuthNav() {
     const { data: session, isPending } = useSession();
+    const { data: currentUser } = useCurrentUser(Boolean(session));
 
     if (isPending) {
         return <div className="h-8 w-16 animate-pulse rounded-md bg-muted" />;
@@ -27,6 +29,11 @@ export function AuthNav() {
             <Link href="/spaces" className={cn(buttonVariants({ size: "sm" }))}>
                 Spaces
             </Link>
+            {currentUser?.role === "ADMIN" && (
+                <Link href="/admin/dashboard" className={cn(buttonVariants({ size: "sm" }))}>
+                    Admin panel
+                </Link>
+            )}
 
             <LogoutButton />
         </div>

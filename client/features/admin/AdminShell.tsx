@@ -44,9 +44,9 @@ export function AdminShell({ children }: AdminShellProps) {
           <div className="flex shrink-0 items-center gap-1 lg:hidden">
             <ThemeToggle />
             <Link
-              href="/admin"
+              href="/spaces"
               className="inline-flex size-10 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
-              aria-label="Sign out"
+              aria-label="Back to spaces"
             >
               <LogOut className="size-4" aria-hidden />
             </Link>
@@ -85,11 +85,11 @@ export function AdminShell({ children }: AdminShellProps) {
         <div className="mt-auto hidden items-center justify-between gap-2 border-t border-border/60 px-4 py-3 lg:flex">
           <ThemeToggle />
           <Link
-            href="/admin"
+            href="/spaces"
             className="inline-flex min-h-9 items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-xs text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
           >
             <LogOut className="size-3.5" aria-hidden />
-            Sign out
+            Back to Spaces
           </Link>
         </div>
       </aside>
