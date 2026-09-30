@@ -1,4 +1,7 @@
 services:
+  # =========================
+  # PostgreSQL
+  # =========================
   postgres:
     image: postgres:17-alpine
     container_name: vybe-postgres
@@ -21,6 +24,10 @@ services:
       timeout: 5s
       retries: 5
 
+
+  # =========================
+  # Redis
+  # =========================
   redis:
     image: redis:8-alpine
     container_name: vybe-redis
@@ -40,6 +47,121 @@ services:
       timeout: 5s
       retries: 5
 
+
+  # =========================
+  # API
+  # =========================
+  api:
+    image: vybe:local
+
+    build:
+      context: .
+      dockerfile: Dockerfile
+
+    container_name: vybe-api
+    restart: unless-stopped
+
+    env_file:
+      - .env.docker
+
+    ports:
+      - "3000:3000"
+
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+      redis:
+        condition: service_healthy
+
+    command:
+      - node
+      - dist/server.js
+
+
+  # =========================
+  # Queue Reconciliation Worker
+  # =========================
+  reconciliation-worker:
+    image: vybe:local
+
+    container_name: vybe-reconciliation-worker
+    restart: unless-stopped
+
+    env_file:
+      - .env.docker
+
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+      redis:
+        condition: service_healthy
+
+    command:
+      - node
+      - dist/reconciliation-worker.js
+
+
+  # =========================
+  # Presence Worker
+  # =========================
+  presence-worker:
+    image: vybe:local
+
+    container_name: vybe-presence-worker
+    restart: unless-stopped
+
+    env_file:
+      - .env.docker
+
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+      redis:
+        condition: service_healthy
+
+    command:
+      - node
+      - dist/presence-worker.js
+
+
+  # =========================
+  # Custom Track Worker
+  # =========================
+  # This worker is not required 24/7.
+  #
+  # Start it only when you need to process
+  # admin-uploaded custom tracks.
+  # =========================
+  custom-track-worker:
+    image: vybe:local
+
+    container_name: vybe-custom-track-worker
+    restart: "no"
+
+    env_file:
+      - .env.docker
+
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+      redis:
+        condition: service_healthy
+
+    command:
+      - node
+      - dist/custom-track-worker.js
+
+    profiles:
+      - custom-worker
+
+
+# =========================
+# Persistent Volumes
+# =========================
 volumes:
   postgres_data:
   redis_data:
