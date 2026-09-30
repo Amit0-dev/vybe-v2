@@ -13,14 +13,22 @@ import {
 import { asyncHandler } from "../../lib/async-handler.js";
 import { requireSpaceMember } from "../../middleware/space.middleware.js";
 import { requireSpaceOwner } from "../../middleware/space-owner.middleware.js";
+import { rateLimiter } from "../../middleware/rateLimiter.js";
 
 export const spaceRouter = Router();
+
+// Rate-Limiter
+const joinSpaceRateLimit = rateLimiter({
+    limit: 30,
+    windowSeconds: 60,
+    keyGenerator: (_req, res) => `join-space:user:${res.locals.user.id}`,
+});
 
 spaceRouter.post("/", requireAuth, asyncHandler(createSpaceController));
 
 spaceRouter.get("/", requireAuth, asyncHandler(getSpacesController));
 
-spaceRouter.post("/join", requireAuth, asyncHandler(joinSpaceController));
+spaceRouter.post("/join", requireAuth, joinSpaceRateLimit, asyncHandler(joinSpaceController));
 
 spaceRouter.get("/:spaceId", requireAuth, requireSpaceMember, asyncHandler(getSpaceController));
 

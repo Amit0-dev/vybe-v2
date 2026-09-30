@@ -13,6 +13,12 @@ export const auth = betterAuth({
     baseURL: env.BETTER_AUTH_URL,
     secret: env.BETTER_AUTH_SECRET,
 
+    rateLimit: {
+        enabled: true,
+        window: 60,
+        max: 100,
+    },
+
     socialProviders: {
         google: {
             clientId: env.GOOGLE_CLIENT_ID!,
@@ -20,9 +26,7 @@ export const auth = betterAuth({
         },
     },
 
-    trustedOrigins: [
-        env.CLIENT_URL
-    ],
+    trustedOrigins: [env.CLIENT_URL],
 
     plugins: [
         magicLink({

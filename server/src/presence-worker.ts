@@ -7,14 +7,12 @@ let shuttingDown = false;
 
 async function startWorker() {
     await connectWorkerInfra();
-    await redisPublisher.connect();
 
     logger.info("Presence worker started");
 
     await startPresenceWorker();
 
     await disconnectWorkerInfra();
-    await redisPublisher.quit();
 
     logger.info("Presence worker stopped");
 }
@@ -47,7 +45,6 @@ startWorker().catch(async (error) => {
         "Presence worker crashed",
     );
 
-    await redisPublisher.quit();
     await disconnectWorkerInfra();
     process.exit(1);
 });
