@@ -10,6 +10,7 @@ import {
     findSpaceByJoinCode,
     findSpaceMembers,
     closeSpace as closeSpaceRecord,
+    reopenSpace as reopenSpaceRecord,
     findSpacesByUserId,
 } from "./space.repository.js";
 import { Prisma } from "../../generated/prisma/client.js";
@@ -106,4 +107,14 @@ export async function closeSpace(spaceId: string) {
 
 export async function getSpaces(userId: string) {
     return findSpacesByUserId(userId);
+}
+
+export async function reopenSpace(spaceId: string) {
+    const result = await reopenSpaceRecord(spaceId);
+
+    if (result.count === 0) {
+        throw new ConflictError("Space is not closed", "SPACE_NOT_CLOSED");
+    }
+
+    return findSpaceById(spaceId);
 }

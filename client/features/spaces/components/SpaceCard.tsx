@@ -1,8 +1,10 @@
 "use client";
 
 import Link from "next/link";
-import { CalendarDays, Crown, Music2 } from "lucide-react";
+import { CalendarDays, Crown, Music2, RotateCcw } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
+import { useReopenSpace } from "../hooks/useReopenSpace";
 import type { ApiSpaceListItem } from "../types/spaces.types";
 
 /** Theme-matched accents only — cream + teal family, no loud random hues. */
@@ -53,6 +55,8 @@ const spaceStatus = {
 export function SpaceCard({ space, className }: { space: ApiSpaceListItem; className?: string }) {
     const isActive = space.spaceStatus === spaceStatus.ACTIVE;
     const isOwner = space.loggedInUserrole === "OWNER";
+    const canReopen = !isActive && isOwner;
+    const reopenMutation = useReopenSpace();
     const tone = getSpaceCardAccent(space.spaceId);
     const styles = ACCENT_STYLES[tone];
     const ownerLabel = space.owner.name?.trim() || space.owner.email;
@@ -64,16 +68,18 @@ export function SpaceCard({ space, className }: { space: ApiSpaceListItem; class
           }).format(joinedAt);
 
     return (
-        <Link
-            href={`/space/${space.spaceId}?spaceName=${space.spaceName}`}
+        <div
             className={cn(
-                "group relative flex min-h-44 flex-col justify-between overflow-hidden rounded-2xl border p-5 transition-all duration-200",
+                "group relative flex min-h-44 flex-col overflow-hidden rounded-2xl border transition-all duration-200",
                 styles.card,
                 "hover:-translate-y-0.5 hover:shadow-[0_16px_32px_-24px_color-mix(in_srgb,var(--primary)_55%,transparent)]",
-                "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
                 className,
             )}
         >
+            <Link
+                href={`/space/${space.spaceId}?spaceName=${space.spaceName}`}
+                className="relative flex flex-1 flex-col justify-between p-5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset"
+            >
             {/* Soft top wash */}
             <div
                 className={cn(
@@ -147,17 +153,33 @@ export function SpaceCard({ space, className }: { space: ApiSpaceListItem; class
                 </div>
             </div>
 
-            <div className="relative mt-5 flex items-center gap-2 border-t border-[color-mix(in_srgb,var(--primary)_12%,transparent)] pt-4 text-sm text-muted-foreground">
-                <Music2 className="size-3.5 shrink-0 text-primary/70" aria-hidden />
-                {/* {nowPlaying ? (
-                    <span className="truncate">
-                        {nowPlaying.title}
-                        {nowPlaying.artist ? ` — ${nowPlaying.artist}` : ""}
-                    </span>
-                ) : (
-                    <span className="truncate">Nothing playing</span>
-                )} */}
-            </div>
-        </Link>
+                <div className="relative mt-5 flex items-center gap-2 border-t border-[color-mix(in_srgb,var(--primary)_12%,transparent)] pt-4 text-sm text-muted-foreground">
+                    <Music2 className="size-3.5 shrink-0 text-primary/70" aria-hidden />
+                </div>
+            </Link>
+
+            {canReopen && (
+                <div className="relative border-t border-[color-mix(in_srgb,var(--primary)_12%,transparent)] px-5 py-3">
+                    <Button
+                        variant="outline"
+                        size="sm"
+                        className="w-full"
+                        onClick={() => reopenMutation.mutate(space.spaceId)}
+                        disabled={reopenMutation.isPending}
+                    >
+                        <RotateCcw
+                            className={reopenMutation.isPending ? "animate-spin" : undefined}
+                            aria-hidden
+                        />
+                        {reopenMutation.isPending ? "Reopening..." : "Reopen space"}
+                    </Button>
+                    {reopenMutation.isError && (
+                        <p className="mt-2 text-xs text-destructive" role="alert">
+                            {reopenMutation.error.message}
+                        </p>
+                    )}
+                </div>
+            )}
+        </div>
     );
 }

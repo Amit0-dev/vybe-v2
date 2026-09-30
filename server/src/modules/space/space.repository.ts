@@ -1,4 +1,4 @@
-import { SpaceStatus } from "../../generated/prisma/enums.js";
+import { SpaceMemberRole, SpaceStatus } from "../../generated/prisma/enums.js";
 import prisma from "../../infra/db.js";
 
 type CreateSpaceRecord = {
@@ -21,7 +21,7 @@ export async function createSpace(input: CreateSpaceRecord) {
             data: {
                 spaceId: space.id,
                 userId: input.ownerId,
-                role: "OWNER",
+                role: SpaceMemberRole.OWNER,
             },
         });
 
@@ -51,7 +51,7 @@ export async function createMembership(userId: string, spaceId: string) {
         data: {
             spaceId,
             userId,
-            role: "PARTICIPANT",
+            role: SpaceMemberRole.PARTICIPANT,
         },
         select: {
             space: {
@@ -113,15 +113,24 @@ export async function deleteMembership(spaceId: string, userId: string) {
 
 export async function closeSpace(spaceId: string) {
     return prisma.space.update({
-        where: { id: spaceId },
+        where: { id: spaceId, status: SpaceStatus.ACTIVE },
         data: {
-            status: "CLOSED",
+            status: SpaceStatus.CLOSED,
         },
         select: {
             id: true,
             name: true,
             status: true,
             updatedAt: true,
+        },
+    });
+}
+
+export async function reopenSpace(spaceId: string) {
+    return prisma.space.updateMany({
+        where: { id: spaceId, status: SpaceStatus.CLOSED },
+        data: {
+            status: SpaceStatus.ACTIVE,
         },
     });
 }

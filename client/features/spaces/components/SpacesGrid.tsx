@@ -9,11 +9,13 @@ import { useSpaces } from "../hooks/useSpaces";
 import { SpaceCardSkeleton } from "./SpaceCardSkeleton";
 import { useCreateSpace } from "../hooks/useCreateSpace";
 import type { CreateSpaceInput } from "../schemas/space.schema";
+import { Button } from "@/components/ui/button";
+import { RefreshCw } from "lucide-react";
 
 export function SpacesGrid() {
     const [dialogOpen, setDialogOpen] = useState(false);
 
-    const { data, isPending, isError, error } = useSpaces();
+    const { data, isPending, isFetching, isError, error, refetch } = useSpaces();
 
     const createSpaceMutation = useCreateSpace();
 
@@ -44,6 +46,19 @@ export function SpacesGrid() {
 
     return (
         <>
+            <div className="mb-4 flex justify-end">
+                <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => refetch()}
+                    disabled={isFetching}
+                    aria-label="Refresh spaces"
+                >
+                    <RefreshCw className={isFetching ? "animate-spin" : undefined} aria-hidden />
+                    Refresh spaces
+                </Button>
+            </div>
+
             {spaces.length === 0 && (
                 <div className="mb-8">
                     <SpacesEmptyState

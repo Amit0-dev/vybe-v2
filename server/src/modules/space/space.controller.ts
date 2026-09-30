@@ -8,6 +8,7 @@ import {
     getSpaces,
     joinSpace,
     leaveSpace,
+    reopenSpace,
 } from "./space.service.js";
 import { parseSpaceIdParams } from "../../middleware/space.middleware.js";
 
@@ -66,6 +67,16 @@ export const closeSpaceController: RequestHandler = async (req, res) => {
     const { spaceId } = parseSpaceIdParams(req.params);
 
     const space = await closeSpace(spaceId);
+
+    return res.status(200).json({
+        space,
+    });
+};
+
+export const reopenSpaceController: RequestHandler = async (req, res) => {
+    const { spaceId } = parseSpaceIdParams(req.params);
+
+    const space = await reopenSpace(spaceId);
 
     return res.status(200).json({
         space,

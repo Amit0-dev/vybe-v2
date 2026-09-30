@@ -8,6 +8,7 @@ import {
     getSpacesController,
     joinSpaceController,
     leaveSpaceController,
+    reopenSpaceController,
 } from "./space.controller.js";
 import { asyncHandler } from "../../lib/async-handler.js";
 import { requireSpaceMember } from "../../middleware/space.middleware.js";
@@ -45,6 +46,13 @@ spaceRouter.post(
     asyncHandler(closeSpaceController),
 );
 
+spaceRouter.post(
+    "/:spaceId/reopen",
+    requireAuth,
+    requireSpaceMember,
+    requireSpaceOwner,
+    asyncHandler(reopenSpaceController),
+);
 
 // TODO: add update space route
 // TODO: add delete space route
