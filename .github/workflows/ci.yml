@@ -19,6 +19,9 @@ jobs:
   validate:
     runs-on: ubuntu-latest
 
+    env:
+      DATABASE_URL: postgresql://postgres:postgres@localhost:5432/vybe
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
