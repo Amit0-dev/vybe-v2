@@ -51,11 +51,10 @@ jobs:
 
       - name: Build frontend
         working-directory: client
-        # Set dummy env so it build successfully in CI. The actual env will be set in the deployment.
         env:
-          NEXT_PUBLIC_API_URL: http://localhost:8080
-          NEXT_PUBLIC_APP_URL: http://localhost:3000
-          NEXT_PUBLIC_WS_URL: ws://localhost:8080
+          NEXT_PUBLIC_API_URL: ${{ vars.NEXT_PUBLIC_API_URL }}
+          NEXT_PUBLIC_APP_URL: ${{ vars.NEXT_PUBLIC_APP_URL }}
+          NEXT_PUBLIC_WS_URL: ${{ vars.NEXT_PUBLIC_WS_URL }}
         run: npm run build
 
   build-and-push:
@@ -96,3 +95,20 @@ jobs:
           tags: |
             ${{ secrets.DOCKERHUB_USERNAME }}/vybe:frontend-latest
             ${{ secrets.DOCKERHUB_USERNAME }}/vybe:frontend-${{ github.sha }}
+
+
+  deploy:
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    needs: build-and-push
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Deploy to EC2
+        uses: appleboy/ssh-action@v1.2.0
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USER }}
+          key: ${{ secrets.EC2_SSH_KEY }}
+          script: |
+            cd /opt/vybe
+            ./deploy.sh ${{ github.sha }}
