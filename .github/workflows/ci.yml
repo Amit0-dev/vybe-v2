@@ -33,17 +33,34 @@ jobs:
           cache: npm
           cache-dependency-path: server/package-lock.json
 
-      - name: Install dependencies
+      - name: Install backend dependencies
         run: npm ci
 
       - name: Generate Prisma client
         run: npx prisma generate
 
-      - name: Typecheck
+      - name: Typecheck backend
         run: npm run typecheck
 
-      - name: Build
+      - name: Build backend
         run: npm run build
+
+      - name: Install frontend dependencies
+        working-directory: client
+        run: npm ci
+
+      - name: Build frontend
+        working-directory: client
+        run: npm run build
+
+  build-and-push:
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    needs: validate
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
 
       - name: Login to Docker Hub
         uses: docker/login-action@v3
@@ -51,13 +68,22 @@ jobs:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-
-      - name: Build and push Docker image
+      - name: Build and push backend image
         uses: docker/build-push-action@v6
         with:
           context: ./server
           file: ./server/Dockerfile
           push: true
           tags: |
-            ${{ secrets.DOCKERHUB_USERNAME }}/vybe:latest
-            ${{ secrets.DOCKERHUB_USERNAME }}/vybe:${{ github.sha }}
+            ${{ secrets.DOCKERHUB_USERNAME }}/vybe:backend-latest
+            ${{ secrets.DOCKERHUB_USERNAME }}/vybe:backend-${{ github.sha }}
+
+      - name: Build and push frontend image
+        uses: docker/build-push-action@v6
+        with:
+          context: ./client
+          file: ./client/Dockerfile
+          push: true
+          tags: |
+            ${{ secrets.DOCKERHUB_USERNAME }}/vybe:frontend-latest
+            ${{ secrets.DOCKERHUB_USERNAME }}/vybe:frontend-${{ github.sha }}

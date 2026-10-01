@@ -1,0 +1,42 @@
+services:
+  frontend:
+    image: amit0x/vybe:frontend-${IMAGE_TAG}
+    container_name: vybe-frontend
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:3000:3000"
+
+  api:
+    image: amit0x/vybe:backend-${IMAGE_TAG}
+    container_name: vybe-api
+    restart: unless-stopped
+    env_file:
+      - /opt/vybe/.env.prod
+    ports:
+      - "127.0.0.1:8080:8080"
+
+  reconciliation-worker:
+    image: amit0x/vybe:backend-${IMAGE_TAG}
+    container_name: vybe-reconciliation-worker
+    restart: unless-stopped
+    env_file:
+      - /opt/vybe/.env.prod
+    command: ["node", "dist/reconciliation-worker.js"]
+
+  presence-worker:
+    image: amit0x/vybe:backend-${IMAGE_TAG}
+    container_name: vybe-presence-worker
+    restart: unless-stopped
+    env_file:
+      - /opt/vybe/.env.prod
+    command: ["node", "dist/presence-worker.js"]
+
+  custom-track-worker:
+    image: amit0x/vybe:backend-${IMAGE_TAG}
+    container_name: vybe-custom-track-worker
+    restart: unless-stopped
+    env_file:
+      - /opt/vybe/.env.prod
+    command: ["node", "dist/custom-track-worker.js"]
+    profiles:
+      - custom-worker
