@@ -1,7 +1,7 @@
 "use client";
 
-import { useDeferredValue, useMemo, useState } from "react";
-import { Music2, Search } from "lucide-react";
+import { useDeferredValue, useEffect, useMemo, useState } from "react";
+import { ChevronLeft, ChevronRight, Music2, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { formatDuration, cn } from "@/lib/utils";
@@ -19,17 +19,37 @@ interface AdminLibraryTableProps {
   className?: string;
   listClassName?: string;
   emptyHint?: string;
+  isLoading?: boolean;
+  error?: string | null;
+  onSearch?: (query: string) => void;
+  onPreviousPage?: () => void;
+  onNextPage?: () => void;
+  page?: number;
+  canGoPrevious?: boolean;
+  canGoNext?: boolean;
 }
 
-/** Placeholder library list with search — wire CRUD later */
 export function AdminLibraryTable({
   tracks = [],
   className,
   listClassName,
   emptyHint = "No tracks yet. Upload the first one to get started.",
+  isLoading = false,
+  error,
+  onSearch,
+  onPreviousPage,
+  onNextPage,
+  page = 1,
+  canGoPrevious = false,
+  canGoNext = false,
 }: AdminLibraryTableProps) {
   const [query, setQuery] = useState("");
   const deferredQuery = useDeferredValue(query);
+
+  useEffect(() => {
+    const timeoutId = window.setTimeout(() => onSearch?.(query), 300);
+    return () => window.clearTimeout(timeoutId);
+  }, [onSearch, query]);
 
   const filtered = useMemo(() => {
     const q = deferredQuery.trim().toLowerCase();
@@ -82,7 +102,17 @@ export function AdminLibraryTable({
         </div>
       </div>
 
-      {tracks.length === 0 ? (
+      {isLoading ? (
+        <div className="space-y-3 px-4 py-6 sm:px-5">
+          {Array.from({ length: 5 }).map((_, index) => (
+            <div key={index} className="h-14 animate-pulse rounded-lg bg-muted/60" />
+          ))}
+        </div>
+      ) : error ? (
+        <div className="px-4 py-12 text-center text-sm text-destructive sm:px-5" role="alert">
+          {error}
+        </div>
+      ) : tracks.length === 0 ? (
         <div className="px-4 py-12 text-center text-sm text-muted-foreground sm:px-5">
           {emptyHint}
         </div>
@@ -148,6 +178,30 @@ export function AdminLibraryTable({
           ))}
         </ul>
       )}
+
+      <div className="flex items-center justify-between border-t border-border/60 px-4 py-3 sm:px-5">
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          disabled={!canGoPrevious || isLoading}
+          onClick={onPreviousPage}
+        >
+          <ChevronLeft aria-hidden />
+          Previous
+        </Button>
+        <span className="text-xs tabular-nums text-muted-foreground">Page {page}</span>
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          disabled={!canGoNext || isLoading}
+          onClick={onNextPage}
+        >
+          Next
+          <ChevronRight aria-hidden />
+        </Button>
+      </div>
     </section>
   );
 }

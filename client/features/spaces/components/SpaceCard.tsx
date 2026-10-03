@@ -1,9 +1,11 @@
 "use client";
 
 import Link from "next/link";
-import { CalendarDays, Crown, Music2, RotateCcw } from "lucide-react";
+import { useState } from "react";
+import { CalendarDays, Check, Copy, Crown, Music2, RotateCcw } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
+import { toast } from "sonner";
 import { useReopenSpace } from "../hooks/useReopenSpace";
 import type { ApiSpaceListItem } from "../types/spaces.types";
 
@@ -53,6 +55,7 @@ const spaceStatus = {
 } as const;
 
 export function SpaceCard({ space, className }: { space: ApiSpaceListItem; className?: string }) {
+    const [isCopied, setIsCopied] = useState(false);
     const isActive = space.spaceStatus === spaceStatus.ACTIVE;
     const isOwner = space.loggedInUserrole === "OWNER";
     const canReopen = !isActive && isOwner;
@@ -153,10 +156,36 @@ export function SpaceCard({ space, className }: { space: ApiSpaceListItem; class
                 </div>
             </div>
 
-                <div className="relative mt-5 flex items-center gap-2 border-t border-[color-mix(in_srgb,var(--primary)_12%,transparent)] pt-4 text-sm text-muted-foreground">
-                    <Music2 className="size-3.5 shrink-0 text-primary/70" aria-hidden />
-                </div>
             </Link>
+
+            <div className="relative flex items-center justify-between gap-3 border-t border-[color-mix(in_srgb,var(--primary)_12%,transparent)] px-5 py-3.5">
+                <div className="min-w-0">
+                    <p className="text-[0.68rem] font-medium uppercase tracking-wider text-muted-foreground">
+                        Space code
+                    </p>
+                    <p className="mt-0.5 truncate font-mono text-sm font-semibold tracking-[0.12em] text-foreground">
+                        {space.spaceJoinCode}
+                    </p>
+                </div>
+                <Button
+                    variant="ghost"
+                    size="icon-sm"
+                    className="text-muted-foreground hover:text-foreground"
+                    aria-label={isCopied ? "Space code copied" : "Copy space code"}
+                    title={isCopied ? "Copied" : "Copy space code"}
+                    onClick={async () => {
+                        try {
+                            await navigator.clipboard.writeText(space.spaceJoinCode);
+                            setIsCopied(true);
+                            window.setTimeout(() => setIsCopied(false), 1500);
+                        } catch {
+                            toast.error("Unable to copy the space code.");
+                        }
+                    }}
+                >
+                    {isCopied ? <Check aria-hidden /> : <Copy aria-hidden />}
+                </Button>
+            </div>
 
             {canReopen && (
                 <div className="relative border-t border-[color-mix(in_srgb,var(--primary)_12%,transparent)] px-5 py-3">

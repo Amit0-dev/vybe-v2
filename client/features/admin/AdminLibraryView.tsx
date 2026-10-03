@@ -1,7 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { Plus, X } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -16,20 +17,71 @@ import {
 } from "@/features/admin/AdminLibraryUpload";
 import {
   AdminLibraryTable,
-  type AdminLibraryTrack,
 } from "@/features/admin/AdminLibraryTable";
+import { ApiError } from "@/lib/api-client";
+import { getAdminCustomTracks } from "./admin-library.api";
 import { cn } from "@/lib/utils";
-
-interface AdminLibraryViewProps {
-  tracks: AdminLibraryTrack[];
-}
 
 /**
  * Desktop: upload panel + list side by side.
  * Phone: list first; floating upload opens a bottom sheet and closes on submit.
  */
-export function AdminLibraryView({ tracks }: AdminLibraryViewProps) {
+export function AdminLibraryView() {
   const [sheetOpen, setSheetOpen] = useState(false);
+  const [page, setPage] = useState(1);
+  const [search, setSearch] = useState("");
+  const [isSettlingUpload, setIsSettlingUpload] = useState(false);
+  const limit = 20;
+  const libraryQuery = useQuery({
+    queryKey: ["admin", "custom-tracks", { search, page, limit }],
+    queryFn: () => getAdminCustomTracks(search, page, limit),
+    refetchInterval: isSettlingUpload ? 2000 : false,
+  });
+  const tracks = libraryQuery.data?.tracks ?? [];
+  const errorMessage =
+    libraryQuery.error instanceof ApiError
+      ? libraryQuery.error.message
+      : libraryQuery.error
+        ? "Unable to load library tracks."
+        : null;
+
+  const handleSearch = useCallback((query: string) => {
+    setSearch(query);
+    setPage(1);
+  }, []);
+
+  const handlePreviousPage = useCallback(() => {
+    setPage((currentPage) => Math.max(1, currentPage - 1));
+  }, []);
+
+  const handleNextPage = useCallback(() => {
+    if (libraryQuery.data?.pagination.hasNextPage) {
+      setPage((currentPage) => currentPage + 1);
+    }
+  }, [libraryQuery.data?.pagination.hasNextPage]);
+
+  const adminTracks = tracks.map((track) => ({
+    id: track.id,
+    title: track.title,
+    artist: track.artist ?? undefined,
+    durationSec: track.durationSec,
+    uploadedAt: new Intl.DateTimeFormat(undefined, { dateStyle: "medium" }).format(
+      new Date(track.createdAt),
+    ),
+  }));
+
+  const handleUploaded = useCallback(async () => {
+    setSheetOpen(false);
+    setIsSettlingUpload(true);
+    await libraryQuery.refetch();
+  }, [libraryQuery]);
+
+  useEffect(() => {
+    if (!isSettlingUpload) return;
+
+    const timeoutId = window.setTimeout(() => setIsSettlingUpload(false), 10000);
+    return () => window.clearTimeout(timeoutId);
+  }, [isSettlingUpload]);
 
   return (
     <div className="relative">
@@ -41,15 +93,24 @@ export function AdminLibraryView({ tracks }: AdminLibraryViewProps) {
         )}
       >
         <AdminLibraryTable
-          tracks={tracks}
+          tracks={adminTracks}
           className="order-1 lg:order-2"
           listClassName="max-h-[min(68dvh,560px)] lg:max-h-[min(58dvh,520px)]"
           emptyHint="No tracks yet. Tap Upload to add the first one."
+          isLoading={libraryQuery.isLoading}
+          error={errorMessage}
+          onSearch={handleSearch}
+          onPreviousPage={handlePreviousPage}
+          onNextPage={handleNextPage}
+          page={libraryQuery.data?.pagination.page ?? page}
+          canGoPrevious={libraryQuery.data?.pagination.hasPreviousPage ?? page > 1}
+          canGoNext={libraryQuery.data?.pagination.hasNextPage ?? false}
         />
 
         <AdminLibraryUpload
           className="order-2 hidden lg:order-1 lg:block"
           idPrefix="desktop-track"
+          onSubmitted={handleUploaded}
         />
       </div>
 
@@ -115,7 +176,7 @@ export function AdminLibraryView({ tracks }: AdminLibraryViewProps) {
                 compact
                 titleId="mobile-track-title"
                 artistId="mobile-track-artist"
-                onSubmitted={() => setSheetOpen(false)}
+                onSubmitted={handleUploaded}
               />
             </div>
           </DialogContent>

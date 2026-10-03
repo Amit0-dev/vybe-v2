@@ -1,19 +1,21 @@
 "use client";
 
+import { useRef, useState } from "react";
 import { Music2, Upload } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
+import { createCustomTrackUploadUrl, uploadCustomTrackFile } from "./admin-library.api";
 
 interface AdminLibraryUploadProps {
   className?: string;
-  /** Called after a UI-only submit (e.g. close mobile sheet) */
-  onSubmitted?: () => void;
+  /** Called after the file has been uploaded (e.g. close mobile sheet). */
+  onSubmitted?: () => void | Promise<void>;
   /** Prefix form control ids when multiple instances can mount */
   idPrefix?: string;
 }
 
-/** UI-only upload panel for desktop library layout */
+/** Upload panel for the shared custom music library. */
 export function AdminLibraryUpload({
   className,
   onSubmitted,
@@ -52,7 +54,7 @@ interface AdminLibraryUploadFieldsProps {
   titleId: string;
   artistId: string;
   onSubmitted?: () => void;
-  /** Tighter spacing for the phone bottom sheet */
+  /** Tighter spacing for the phone bottom sheet. */
   compact?: boolean;
 }
 
@@ -64,14 +66,50 @@ export function AdminLibraryUploadFields({
   onSubmitted,
   compact = false,
 }: AdminLibraryUploadFieldsProps) {
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [isUploading, setIsUploading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
   return (
     <form
       className={cn("space-y-4", className)}
-      onSubmit={(e) => {
+      onSubmit={async (e) => {
         e.preventDefault();
-        // UI shell only — connect upload later
-        onSubmitted?.();
-        e.currentTarget.reset();
+        const form = e.currentTarget;
+        if (!selectedFile) {
+          setError("Choose an MP3 file first.");
+          return;
+        }
+
+        if (selectedFile.type !== "audio/mpeg" && !selectedFile.name.toLowerCase().endsWith(".mp3")) {
+          setError("Only MP3 files are supported.");
+          return;
+        }
+
+        const formData = new FormData(form);
+        const title = String(formData.get("title") ?? "").trim();
+        const artist = String(formData.get("artist") ?? "").trim();
+
+        if (!title || !artist) {
+          setError("Title and artist are required.");
+          return;
+        }
+
+        setError(null);
+        setIsUploading(true);
+
+        try {
+          const { uploadUrl } = await createCustomTrackUploadUrl({ title, artist });
+          await uploadCustomTrackFile(uploadUrl, selectedFile);
+          await onSubmitted?.();
+          form.reset();
+          setSelectedFile(null);
+        } catch (uploadError) {
+          setError(uploadError instanceof Error ? uploadError.message : "Upload failed.");
+        } finally {
+          setIsUploading(false);
+        }
       }}
     >
       <div
@@ -91,17 +129,33 @@ export function AdminLibraryUploadFields({
         <p className="mt-2.5 text-sm font-medium">
           {compact ? "Pick an audio file" : "Drop an audio file here"}
         </p>
-        <p className="mt-1 text-xs text-muted-foreground">
-          MP3, WAV, or M4A · UI preview only
-        </p>
+        <p className="mt-1 text-xs text-muted-foreground">MP3 files only</p>
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept="audio/mpeg,.mp3"
+          className="sr-only"
+          onChange={(event) => {
+            const file = event.target.files?.[0] ?? null;
+            setSelectedFile(file);
+            setError(null);
+          }}
+        />
         <Button
           type="button"
           variant="outline"
           className="mt-3 h-10 gap-2 font-medium"
+          onClick={() => fileInputRef.current?.click()}
+          disabled={isUploading}
         >
           <Upload className="size-4" aria-hidden />
-          Choose file
+          {selectedFile ? "Change file" : "Choose file"}
         </Button>
+        {selectedFile && (
+          <p className="mt-2 max-w-full truncate text-xs text-muted-foreground">
+            {selectedFile.name}
+          </p>
+        )}
       </div>
 
       <div
@@ -140,9 +194,15 @@ export function AdminLibraryUploadFields({
           "h-11 font-medium",
           compact ? "w-full" : "w-full sm:w-auto sm:px-6",
         )}
+        disabled={isUploading}
       >
-        Add to library
+        {isUploading ? "Uploading..." : "Add to library"}
       </Button>
+      {error && (
+        <p className="text-sm text-destructive" role="alert">
+          {error}
+        </p>
+      )}
     </form>
   );
 }
