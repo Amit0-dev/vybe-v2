@@ -15,10 +15,13 @@ export const auth = betterAuth({
     secret: env.BETTER_AUTH_SECRET,
 
     advanced: {
-        crossSubDomainCookies: {
-            enabled: true,
-            domain: "vybe.amitx.tech",
-        },
+        crossSubDomainCookies:
+            env.NODE_ENV === "production"
+                ? {
+                      enabled: true,
+                      domain: "vybe.amitx.tech",
+                  }
+                : undefined,
     },
 
     rateLimit: {
