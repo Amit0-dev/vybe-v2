@@ -4,7 +4,7 @@ import { apiLogger } from "../infra/logger.js";
 import { auth } from "../lib/auth.js";
 import { fromNodeHeaders } from "better-auth/node";
 import { findUserById } from "../modules/auth/auth.repository.js";
-import { findMembership } from "../modules/space/space.repository.js";
+import { findMembership, findSpaceById } from "../modules/space/space.repository.js";
 import { addConnection, removeConnection } from "./realtime.manager.js";
 import {
     handleUserConnected,
@@ -15,6 +15,7 @@ import { RealtimeEvent } from "./realtime.events.js";
 import { refreshConnection, registerConnection, unregisterConnection } from "./presence.service.js";
 import { getLiveUsersCountInSpace } from "./presence.service.js";
 import { publishRealtimeEvent } from "./publishRealtimeEvent.js";
+import { SpaceStatus } from "../generated/prisma/browser.js";
 
 export interface RealtimeSocket extends WebSocket {
     userId: string;
@@ -78,6 +79,26 @@ export function initializeRealtime(server: Server) {
 
             if (!membership) {
                 socket.close(1008, "Not a member of this Space");
+                return;
+            }
+
+            const spaceRecord = await findSpaceById(spaceId);
+
+            if (!spaceRecord) {
+                socket.close(1008, "Space not found");
+                return;
+            }
+
+            if (spaceRecord.status !== SpaceStatus.ACTIVE) {
+                socket.send(
+                    JSON.stringify({
+                        type: RealtimeEvent.SPACE_CLOSED,
+                        spaceId,
+                        reason: "ALREADY_CLOSED",
+                    }),
+                );
+
+                socket.close(1008, "Space is closed");
                 return;
             }
 

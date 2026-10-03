@@ -54,7 +54,7 @@ export async function handleOwnerRecovery() {
             await publishRealtimeEvent({
                 type: RealtimeEvent.SPACE_CLOSED,
                 spaceId,
-                reason: "OWNER_OFFLINE",
+                reason: "OWNER_OFFLINE_TIMEOUT",
             });
         }
 

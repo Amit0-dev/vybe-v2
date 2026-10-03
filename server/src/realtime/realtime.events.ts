@@ -75,10 +75,14 @@ export type OwnerOnlineEvent = {
     spaceId: string;
 };
 
+type SpaceClosedReason =
+    | "ALREADY_CLOSED"
+    | "OWNER_OFFLINE_TIMEOUT";
+
 export type SpaceClosedEvent = {
     type: typeof RealtimeEvent.SPACE_CLOSED;
     spaceId: string;
-    reason: "OWNER_OFFLINE";
+    reason: SpaceClosedReason;
 };
 
 export type SpaceMemberJoinedEvent = {
