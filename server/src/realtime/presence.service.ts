@@ -131,3 +131,7 @@ export async function getLiveUsersCountInSpace(spaceId: string) {
     const count = await redis.sCard(getUsersKey(spaceId));
     return count;
 }
+
+export async function isUserConnectedToSpace(spaceId: string, userId: string) {
+    return (await redis.sIsMember(getUsersKey(spaceId), userId)) === 1;
+}

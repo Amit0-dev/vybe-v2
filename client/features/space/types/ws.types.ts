@@ -14,6 +14,7 @@ export interface SpaceSnapshot {
     queue: ApiQueueItem[];
     memberCount: number;
     liveUserCount: number;
+    ownerOnline: boolean;
     playback: ApiPlaybackState | null;
 }
 

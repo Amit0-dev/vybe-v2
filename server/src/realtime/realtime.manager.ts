@@ -28,10 +28,6 @@ export function removeConnection(spaceId: string, socket: RealtimeSocket) {
     }
 }
 
-export function getSpaceConnections(spaceId: string) {
-    return spaceConnections.get(spaceId);
-}
-
 export function broadcastToSpace(spaceId: string, event: unknown) {
     const connections = spaceConnections.get(spaceId);
 
@@ -46,36 +42,4 @@ export function broadcastToSpace(spaceId: string, event: unknown) {
             socket.send(message);
         }
     }
-}
-
-export function isUserConnectedToSpace(spaceId: string, userId: string) {
-    const connections = spaceConnections.get(spaceId);
-
-    if (!connections) {
-        return false;
-    }
-
-    for (const socket of connections) {
-        if (socket.userId === userId) {
-            return true;
-        }
-    }
-
-    return false;
-}
-
-export function getActiveUsersCountInSpace(spaceId: string) {
-    const connections = spaceConnections.get(spaceId);
-
-    if (!connections) {
-        return 0;
-    }
-
-    const uniqueUserIds = new Set<string>();
-
-    for (const socket of connections) {
-        uniqueUserIds.add(socket.userId);
-    }
-
-    return uniqueUserIds.size;
 }

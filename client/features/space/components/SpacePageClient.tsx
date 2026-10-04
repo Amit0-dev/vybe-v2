@@ -348,7 +348,6 @@ export function SpacePageClient({ spaceId }: { spaceId: string }) {
             liveUserCount={liveUserCount}
             isOwner={spaceData.isOwner}
             isOwnerOnline={isOwnerOnline}
-            ownerName={"Test Owner"}
             spaceStatus={isSpaceClosed ? "CLOSED" : spaceData.status}
             track={currentPlayback}
             progressSec={progressSec}

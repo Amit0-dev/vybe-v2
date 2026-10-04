@@ -89,6 +89,7 @@ export function useSpaceRealtime(spaceId: string) {
             switch (message.type) {
                 case "SPACE_SNAPSHOT": {
                     setSnapshot(message.payload);
+                    setIsOwnerOnline(message.payload.ownerOnline);
                     setError(null);
                     break;
                 }

@@ -12,8 +12,13 @@ import {
 } from "../modules/playback/playback.service.js";
 import { getSpaceRealtimeSnapshot } from "../modules/space/space-realtime.service.js";
 import { RealtimeEvent } from "./realtime.events.js";
-import { refreshConnection, registerConnection, unregisterConnection } from "./presence.service.js";
-import { getLiveUsersCountInSpace } from "./presence.service.js";
+import {
+    getLiveUsersCountInSpace,
+    isUserConnectedToSpace,
+    refreshConnection,
+    registerConnection,
+    unregisterConnection,
+} from "./presence.service.js";
 import { publishRealtimeEvent } from "./publishRealtimeEvent.js";
 import { SpaceStatus } from "../generated/prisma/browser.js";
 
@@ -160,7 +165,11 @@ export function initializeRealtime(server: Server) {
                 }
             });
 
-            const snapshot = await getSpaceRealtimeSnapshot(spaceId, user.id);
+            const snapshot = await getSpaceRealtimeSnapshot(
+                spaceId,
+                user.id,
+                await isUserConnectedToSpace(spaceId, spaceRecord.ownerId),
+            );
 
             if (socket.readyState === WebSocket.OPEN) {
                 socket.send(
