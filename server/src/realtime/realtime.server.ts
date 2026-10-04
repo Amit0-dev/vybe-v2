@@ -54,6 +54,10 @@ export function initializeRealtime(server: Server) {
     }, 30_000);
 
     wss.on("connection", async (socket, request) => {
+        socket.on("error", (error) => {
+            apiLogger.error(error, "WebSocket client error");
+        });
+
         try {
             const session = await auth.api.getSession({
                 headers: fromNodeHeaders(request.headers),
@@ -122,110 +126,36 @@ export function initializeRealtime(server: Server) {
             // add to Space connections
             addConnection(spaceId, realtimeSocket);
 
-            let presenceConnectionId: string;
-
-            try {
-                presenceConnectionId = await registerConnection(spaceId, user.id);
-            } catch (error) {
-                removeConnection(spaceId, realtimeSocket);
-
-                apiLogger.error(
-                    {
-                        err: error,
-                        userId: user.id,
-                        spaceId,
-                    },
-                    "Failed to register realtime presence",
-                );
-
-                socket.close(1011, "Realtime service unavailable");
-                return;
-            }
-
-            if (socket.readyState !== WebSocket.OPEN) {
-                removeConnection(spaceId, realtimeSocket);
-                await unregisterConnection(spaceId, presenceConnectionId, user.id);
-                return;
-            }
-
-            socket.on("pong", async () => {
-                realtimeSocket.isAlive = true;
-
-                try {
-                    await refreshConnection(spaceId, presenceConnectionId, user.id);
-                } catch (error) {
-                    apiLogger.error(
-                        {
-                            err: error,
-                            userId: user.id,
-                            spaceId,
-                        },
-                        "Failed to refresh realtime presence",
-                    );
-                }
-            });
-
-            const snapshot = await getSpaceRealtimeSnapshot(
-                spaceId,
-                user.id,
-                await isUserConnectedToSpace(spaceId, spaceRecord.ownerId),
-            );
-
-            if (socket.readyState === WebSocket.OPEN) {
-                socket.send(
-                    JSON.stringify({
-                        type: RealtimeEvent.SPACE_SNAPSHOT,
-                        spaceId,
-                        payload: snapshot,
-                    }),
-                );
-            }
-
-            try {
-                await handleUserConnected(spaceId, user.id);
-            } catch (error) {
-                apiLogger.error(
-                    {
-                        err: error,
-                        userId: user.id,
-                        spaceId,
-                    },
-                    "Failed to handle user connection",
-                );
-            }
-
-            const liveUserCount = await getLiveUsersCountInSpace(spaceId);
-
-            if (liveUserCount !== previousLiveUserCount) {
-                await publishRealtimeEvent({
-                    type: RealtimeEvent.LIVE_USER_COUNT_UPDATED,
-                    spaceId,
-                    liveUserCount,
-                });
-            }
-
-            apiLogger.info({ userId: user.id, spaceId }, "WebSocket client connected");
+            let presenceConnectionId: string | null = null;
+            let closeHandled = false;
 
             socket.on("close", async () => {
+                if (closeHandled) {
+                    return;
+                }
+
+                closeHandled = true;
                 removeConnection(spaceId, realtimeSocket);
 
                 let becameOffline = false;
 
-                try {
-                    becameOffline = await unregisterConnection(
-                        spaceId,
-                        presenceConnectionId,
-                        user.id,
-                    );
-                } catch (error) {
-                    apiLogger.error(
-                        {
-                            err: error,
-                            userId: user.id,
+                if (presenceConnectionId) {
+                    try {
+                        becameOffline = await unregisterConnection(
                             spaceId,
-                        },
-                        "Failed to unregister realtime presence",
-                    );
+                            presenceConnectionId,
+                            user.id,
+                        );
+                    } catch (error) {
+                        apiLogger.error(
+                            {
+                                err: error,
+                                userId: user.id,
+                                spaceId,
+                            },
+                            "Failed to unregister realtime presence",
+                        );
+                    }
                 }
 
                 apiLogger.info(
@@ -265,9 +195,100 @@ export function initializeRealtime(server: Server) {
                 }
             });
 
-            socket.on("error", (error) => {
-                apiLogger.error(error, "WebSocket client error");
+            try {
+                presenceConnectionId = await registerConnection(spaceId, user.id);
+            } catch (error) {
+                removeConnection(spaceId, realtimeSocket);
+
+                apiLogger.error(
+                    {
+                        err: error,
+                        userId: user.id,
+                        spaceId,
+                    },
+                    "Failed to register realtime presence",
+                );
+
+                socket.close(1011, "Realtime service unavailable");
+                return;
+            }
+
+            if (socket.readyState !== WebSocket.OPEN) {
+                removeConnection(spaceId, realtimeSocket);
+                if (presenceConnectionId) {
+                    await unregisterConnection(spaceId, presenceConnectionId, user.id);
+                }
+                return;
+            }
+
+            const connectionId = presenceConnectionId;
+
+            if (!connectionId) {
+                return;
+            }
+
+            socket.on("pong", async () => {
+                realtimeSocket.isAlive = true;
+
+                try {
+                    await refreshConnection(spaceId, connectionId, user.id);
+                } catch (error) {
+                    apiLogger.error(
+                        {
+                            err: error,
+                            userId: user.id,
+                            spaceId,
+                        },
+                        "Failed to refresh realtime presence",
+                    );
+                }
             });
+
+            const snapshot = await getSpaceRealtimeSnapshot(
+                spaceId,
+                user.id,
+                await isUserConnectedToSpace(spaceId, spaceRecord.ownerId),
+            );
+
+            if (socket.readyState === WebSocket.OPEN) {
+                socket.send(
+                    JSON.stringify({
+                        type: RealtimeEvent.SPACE_SNAPSHOT,
+                        spaceId,
+                        payload: snapshot,
+                    }),
+                );
+            }
+
+            if (socket.readyState !== WebSocket.OPEN) {
+                return;
+            }
+
+            try {
+                await handleUserConnected(spaceId, user.id);
+            } catch (error) {
+                apiLogger.error(
+                    {
+                        err: error,
+                        userId: user.id,
+                        spaceId,
+                    },
+                    "Failed to handle user connection",
+                );
+            }
+
+            const liveUserCount = await getLiveUsersCountInSpace(spaceId);
+
+            if (liveUserCount !== previousLiveUserCount) {
+                await publishRealtimeEvent({
+                    type: RealtimeEvent.LIVE_USER_COUNT_UPDATED,
+                    spaceId,
+                    liveUserCount,
+                });
+            }
+
+            apiLogger.info({ userId: user.id, spaceId }, "WebSocket client connected");
+
         } catch (error) {
             apiLogger.error(error, "WebSocket authentication failed");
 

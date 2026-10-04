@@ -13,6 +13,12 @@ const REGISTER_CONNECTION_SCRIPT = `
     return 1
 `;
 
+const REFRESH_CONNECTION_SCRIPT = `
+    redis.call("ZADD", KEYS[1], ARGV[1], ARGV[2])
+    redis.call("SADD", KEYS[2], ARGV[3])
+    return 1
+`;
+
 const UNREGISTER_CONNECTION_SCRIPT = `
     local connectionKey = KEYS[1]
     local usersKey = KEYS[2]
@@ -98,9 +104,9 @@ export async function refreshConnection(spaceId: string, connectionId: string, u
     const member = `${connectionId}:${userId}`;
     const expiresAt = Date.now() + PRESENCE_LEASE_MS;
 
-    await redis.zAdd(getConnectionsKey(spaceId), {
-        score: expiresAt,
-        value: member,
+    await redis.eval(REFRESH_CONNECTION_SCRIPT, {
+        keys: [getConnectionsKey(spaceId), getUsersKey(spaceId)],
+        arguments: [String(expiresAt), member, userId],
     });
 }
 

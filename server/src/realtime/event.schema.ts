@@ -65,7 +65,7 @@ const ownerOnlineSchema = z.object({
 const spaceClosedSchema = z.object({
     type: z.literal(RealtimeEvent.SPACE_CLOSED),
     spaceId: z.string(),
-    reason: z.literal("OWNER_OFFLINE"),
+    reason: z.enum(["ALREADY_CLOSED", "OWNER_OFFLINE_TIMEOUT"]),
 });
 
 const spaceMemberJoinedSchema = z.object({
