@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState } from "react";
 import type { ApiQueueItem } from "@/features/queue/types/queue.types";
 import type {
     ServerMessage,
+    SpaceClosedReason,
     SpaceConnectionStatus,
     SpaceSnapshot,
 } from "../types/ws.types";
@@ -31,6 +32,7 @@ export function useSpaceRealtime(spaceId: string) {
     const [error, setError] = useState<string | null>(null);
     const [isOwnerOnline, setIsOwnerOnline] = useState(true);
     const [isSpaceClosed, setIsSpaceClosed] = useState(false);
+    const [spaceClosedReason, setSpaceClosedReason] = useState<SpaceClosedReason | null>(null);
 
     const applyQueueItem = useCallback((queueItem: ApiQueueItem) => {
         setSnapshot((current) => {
@@ -70,7 +72,7 @@ export function useSpaceRealtime(spaceId: string) {
     }, []);
 
     const handleMessage = useCallback(
-        (event: MessageEvent) => {
+        (event: MessageEvent, client: ReturnType<typeof createSpaceWsClient>) => {
             let message: ServerMessage;
 
             try {
@@ -226,8 +228,10 @@ export function useSpaceRealtime(spaceId: string) {
                 }
 
                 case "SPACE_CLOSED": {
+                    client.markConnectionTerminal();
                     setIsOwnerOnline(false);
                     setIsSpaceClosed(true);
+                    setSpaceClosedReason(message.reason);
                     break;
                 }
             }
@@ -244,7 +248,9 @@ export function useSpaceRealtime(spaceId: string) {
             if (!cancelled) setStatus("connecting");
         });
 
-        const client = createSpaceWsClient({
+        let client: ReturnType<typeof createSpaceWsClient>;
+
+        client = createSpaceWsClient({
             spaceId,
             onOpen() {
                 setStatus("connected");
@@ -263,7 +269,7 @@ export function useSpaceRealtime(spaceId: string) {
                 setError("WebSocket connection error");
             },
             onMessage(event) {
-                handleMessage(event);
+                handleMessage(event, client);
             },
         });
 
@@ -279,6 +285,7 @@ export function useSpaceRealtime(spaceId: string) {
         error,
         isOwnerOnline,
         isSpaceClosed,
+        spaceClosedReason,
         applyQueueItem,
         applyQueueScore,
         applyPlayback,

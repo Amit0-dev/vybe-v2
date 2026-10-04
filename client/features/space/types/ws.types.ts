@@ -8,6 +8,8 @@ export type SpaceConnectionStatus =
     | "reconnecting"
     | "error";
 
+export type SpaceClosedReason = "ALREADY_CLOSED" | "OWNER_OFFLINE_TIMEOUT";
+
 export interface SpaceSnapshot {
     queue: ApiQueueItem[];
     memberCount: number;
@@ -67,5 +69,5 @@ export type ServerMessage =
         | {
             type: "SPACE_CLOSED";
             spaceId: string;
-            reason: "OWNER_OFFLINE";
+            reason: SpaceClosedReason;
       };

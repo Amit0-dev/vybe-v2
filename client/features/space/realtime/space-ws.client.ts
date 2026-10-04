@@ -29,8 +29,11 @@ export function createSpaceWsClient({
     let reconnectAttempts = 0;
     let manuallyClosed = false;
 
+    // This now belongs to THIS WebSocket client only.
+    let connectionTerminal = false;
+
     function connect() {
-        if (manuallyClosed) return;
+        if (manuallyClosed || connectionTerminal) return;
 
         socket = new WebSocket(url.toString());
 
@@ -42,7 +45,7 @@ export function createSpaceWsClient({
         socket.addEventListener("close", () => {
             onClose?.();
 
-            if (manuallyClosed) return;
+            if (manuallyClosed || connectionTerminal) return;
 
             onReconnect?.();
             scheduleReconnect();
@@ -58,7 +61,7 @@ export function createSpaceWsClient({
     }
 
     function scheduleReconnect() {
-        if (manuallyClosed || reconnectTimer) return;
+        if (manuallyClosed || reconnectTimer || connectionTerminal) return;
 
         const baseDelay = 1000; // 1 second
         const maxDelay = 30_000; // 30 seconds
@@ -74,6 +77,18 @@ export function createSpaceWsClient({
             reconnectTimer = null;
             connect();
         }, delay);
+    }
+
+    function markConnectionTerminal() {
+        connectionTerminal = true;
+
+        if (reconnectTimer) {
+            clearTimeout(reconnectTimer);
+            reconnectTimer = null;
+        }
+
+        socket?.close(1000, "Space closed");
+        socket = null;
     }
 
     function close() {
@@ -92,5 +107,6 @@ export function createSpaceWsClient({
 
     return {
         close,
+        markConnectionTerminal
     };
 }

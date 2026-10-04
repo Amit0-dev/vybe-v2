@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { SpaceHeader } from "./SpaceHeader";
 import { OwnerPresence } from "./OwnerPresence";
 import { OwnerOfflineBanner } from "./OwnerOfflineBanner";
@@ -110,9 +111,15 @@ export function SpaceRoom({
                             This Space is inactive
                         </h2>
                         <p className="mt-3 text-sm leading-relaxed text-muted-foreground">
-                            The host is no longer connected. You can rejoin when the Space becomes
-                            active again.
+                            This Space is inactive right now. You can return to your Spaces and
+                            choose another room.
                         </p>
+                        <Link
+                            href="/spaces"
+                            className="mt-6 inline-flex h-9 items-center justify-center rounded-lg bg-primary px-2.5 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                        >
+                            Back to Spaces
+                        </Link>
                     </Container>
                 </main>
             </div>

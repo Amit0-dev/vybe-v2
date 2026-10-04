@@ -28,6 +28,7 @@ export function SpacePageClient({ spaceId }: { spaceId: string }) {
         error: realtimeError,
         isOwnerOnline,
         isSpaceClosed,
+        spaceClosedReason,
         applyQueueItem,
         applyPlayback,
     } = useSpaceRealtime(spaceId);
@@ -93,10 +94,10 @@ export function SpacePageClient({ spaceId }: { spaceId: string }) {
     const currentPlayback = snapshot?.playback ?? null;
 
     useEffect(() => {
-        if (isSpaceClosed) {
+        if (spaceClosedReason === "OWNER_OFFLINE_TIMEOUT") {
             router.replace("/spaces");
         }
-    }, [isSpaceClosed, router]);
+    }, [router, spaceClosedReason]);
 
     const loadPlaybackItem = useCallback(
         async (queueItem: NonNullable<typeof currentPlayback>, autoPlay: boolean) => {
