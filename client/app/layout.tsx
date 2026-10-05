@@ -5,6 +5,7 @@ import { ThemeProvider } from "@/components/theme/ThemeProvider";
 import "./globals.css";
 import { QueryProvider } from "@/components/providers/QueryProvider";
 import { Toaster } from "sonner";
+import Script from "next/script";
 
 const zenKaku = Zen_Kaku_Gothic_New({
     variable: "--font-display",
@@ -56,6 +57,26 @@ export default function RootLayout({
                         <Toaster position="top-right" richColors />
                     </QueryProvider>
                 </ThemeProvider>
+
+                <Script async src="https://plausible.io/js/pa-U4Ru1trbLZyatdkGQzIbC.js" />
+
+                <Script id="plausible-init">
+                    {`
+                        window.plausible =
+                            window.plausible ||
+                            function() {
+                                (window.plausible.q = window.plausible.q || []).push(arguments);
+                            };
+
+                        window.plausible.init =
+                            window.plausible.init ||
+                            function(i) {
+                                window.plausible.o = i || {};
+                            };
+
+                        window.plausible.init();
+                    `}
+                </Script>
             </body>
         </html>
     );
